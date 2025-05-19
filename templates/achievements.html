@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}GameFit - Achievements{% endblock %}
+{% block content %}
+  <div class="container fadeIn">
+    <div class="card p-4 mb-4">
+      <h2><i class="fas fa-medal"></i> Achievements</h2>
+      <p>Complete challenges to unlock special achievements and show off your fitness prowess!</p>
+  <div class="achievement-grid">
+    <!-- Beginner Tier -->
+    <div class="achievement {% if user and user.exercise_points >= 10 %}{% else %}locked{% endif %}">
+      <i class="fas fa-shoe-prints achievement-icon"></i>
+      <div class="achievement-name">First Steps</div>
+      <div class="achievement-desc">Earn 10 points</div>
+    </div>
+    
+    <div class="achievement {% if user and user.exercise_points >= 50 %}{% else %}locked{% endif %}">
+      <i class="fas fa-fire achievement-icon"></i>
+      <div class="achievement-name">Warming Up</div>
+      <div class="achievement-desc">Earn 50 points</div>
+    </div>
+    
+    <div class="achievement {% if user and user.exercise_points >= 100 %}{% else %}locked{% endif %}">
+      <i class="fas fa-dumbbell achievement-icon"></i>
+      <div class="achievement-name">Getting Stronger</div>
+      <div class="achievement-desc">Earn 100 points</div>
+    </div>
+    
+    <!-- Intermediate Tier -->
+    <div class="achievement {% if user and user.exercise_points >= 200 %}{% else %}locked{% endif %}">
+      <i class="fas fa-medal rank-silver achievement-icon"></i>
+      <div class="achievement-name">Silver Rank</div>
+      <div class="achievement-desc">Reach Silver rank</div>
+    </div>
+    
+    <div class="achievement {% if user and user.exercise_points >= 300 %}{% else %}locked{% endif %}">
+      <i class="fas fa-bolt achievement-icon"></i>
+      <div class="achievement-name">Energized</div>
+      <div class="achievement-desc">Earn 300 points</div>
+    </div>
+    
+    <div class="achievement {% if user and user.exercise_points >= 400 %}{% else %}locked{% endif %}">
+      <i class="fas fa-gem rank-diamond achievement-icon"></i>
+      <div class="achievement-name">Diamond Rank</div>
+      <div class="achievement-desc">Reach Diamond rank</div>
+    </div>
+    
+    <!-- Advanced Tier -->
+    <div class="achievement {% if user and user.exercise_points >= 500 %}{% else %}locked{% endif %}">
+      <i class="fas fa-fist-raised achievement-icon"></i>
+      <div class="achievement-name">Unstoppable</div>
+      <div class="achievement-desc">Earn 500 points</div>
+    </div>
+    
+    <div class="achievement {% if user and user.exercise_points >= 700 %}{% else %}locked{% endif %}">
+      <i class="fas fa-gem rank-ruby achievement-icon"></i>
+      <div class="achievement-name">Ruby Rank</div>
+      <div class="achievement-desc">Reach Ruby rank</div>
+    </div>
+    
+    <div class="achievement {% if user and user.exercise_points >= 1000 %}{% else %}locked{% endif %}">
+      <i class="fas fa-crown rank-master achievement-icon"></i>
+      <div class="achievement-name">Master Rank</div>
+      <div class="achievement-desc">Reach Master rank</div>
+    </div>
+    
+    <!-- Special Achievements -->
+    <div class="achievement locked">
+      <i class="fas fa-calendar-check achievement-icon"></i>
+      <div class="achievement-name">Consistent</div>
+      <div class="achievement-desc">Exercise 7 days in a row</div>
+    </div>
+    
+    <div class="achievement locked">
+      <i class="fas fa-users achievement-icon"></i>
+      <div class="achievement-name">Social</div>
+      <div class="achievement-desc">Invite 3 friends</div>
+    </div>
+    
+    <div class="achievement locked">
+      <i class="fas fa-star achievement-icon"></i>
+      <div class="achievement-name">Legend</div>
+      <div class="achievement-desc">Earn 5000 points</div>
+    </div>
+  </div>
+</div>
+
+<div class="card p-3">
+  <h3><i class="fas fa-trophy"></i> Your Progress</h3>
+  <div class="progress mb-3">
+    <div class="progress-bar" style="width: {{ (user.achievements_unlocked / 12) * 100 if user and user.achievements_unlocked else 0 }}%;"></div>
+  </div>
+  <p>You've unlocked <strong>{% if user %}{{ user.achievements_unlocked }}{% else %}0{% endif %}/12</strong> achievements</p>
+  
+  <div class="stats-card">
+    <div>
+      <div class="stats-card-value">{% if user %}{{ user.exercise_points }}{% else %}0{% endif %}</div>
+      <div class="stats-card-label">Current Points</div>
+    </div>
+    <i class="fas fa-award stats-card-icon"></i>
+  </div>
+</div>
+  </div>
+{% endblock %}

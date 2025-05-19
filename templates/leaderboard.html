@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}GameFit - Leaderboard{% endblock %}
+{% block content %}
+  <div class="container fadeIn">
+    <div class="card p-4">
+      <h2><i class="fas fa-trophy"></i> Leaderboard</h2>
+  <div class="mb-3">
+    <select id="leaderboard-filter" class="form-control" style="width: auto; margin-bottom: 15px;">
+      <option value="all">All Time</option>
+      <option value="weekly">This Week</option>
+      <option value="daily">Today</option>
+    </select>
+  </div>
+  
+  <table class="leaderboard">
+    <thead>
+      <tr>
+        <th class="rank-cell">#</th>
+        <th>Player</th>
+        <th>Rank</th>
+        <th>Points</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in top_players %}
+        <tr class="rank-highlight {% if player.get_rank() == 'Bronze' %}bronze
+            {% elif player.get_rank() == 'Silver' %}silver
+            {% elif player.get_rank() == 'Diamond' %}diamond
+            {% elif player.get_rank() == 'Ruby' %}ruby
+            {% elif player.get_rank() == 'Master' %}master{% endif %}">
+          <td class="rank-cell">{{ loop.index }}</td>
+          <td>
+            {% if player.id == user.id %}<strong>{{ player.username }}</strong> (You){% else %}{{ player.username }}{% endif %}
+          </td>
+          <td>
+            {% if player.get_rank() == 'Bronze' %}
+              <i class="fas fa-medal rank-bronze"></i>
+            {% elif player.get_rank() == 'Silver' %}
+              <i class="fas fa-medal rank-silver"></i>
+            {% elif player.get_rank() == 'Diamond' %}
+              <i class="fas fa-gem rank-diamond"></i>
+            {% elif player.get_rank() == 'Ruby' %}
+              <i class="fas fa-gem rank-ruby"></i>
+            {% elif player.get_rank() == 'Master' %}
+              <i class="fas fa-crown rank-master"></i>
+            {% endif %}
+            <span class="
+              {% if player.get_rank() == 'Bronze' %}rank-bronze
+              {% elif player.get_rank() == 'Silver' %}rank-silver
+              {% elif player.get_rank() == 'Diamond' %}rank-diamond
+              {% elif player.get_rank() == 'Ruby' %}rank-ruby
+              {% elif player.get_rank() == 'Master' %}rank-master
+              {% endif %}
+            ">{{ player.get_rank() }}</span>
+          </td>
+          <td>{{ player.exercise_points }}</td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="4" class="text-center">No players found</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card p-3 mt-4">
+  <h3><i class="fas fa-chart-line"></i> Your Stats</h3>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="stats-card">
+        <div>
+          <div class="stats-card-value">{{ user.exercise_points }}</div>
+          <div class="stats-card-label">Total Points</div>
+        </div>
+        <i class="fas fa-star stats-card-icon"></i>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="stats-card">
+        <div>
+          <div class="stats-card-value">{{ user_rank }}</div>
+          <div class="stats-card-label">Your Position</div>
+        </div>
+        <i class="fas fa-ranking-star stats-card-icon"></i>
+      </div>
+    </div>
+  </div>
+</div>
+  </div>
+{% endblock %}

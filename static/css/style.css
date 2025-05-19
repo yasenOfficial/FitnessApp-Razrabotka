@@ -1,0 +1,500 @@
+/* GameFit - Gamified Fitness App Styles */
+/* Base Styles & Variables */
+:root {
+  --primary: #ff6e40;
+  --primary-dark: #ff3d00;
+  --secondary: #00e5ff;
+  --dark: #1a1a2e;
+  --light: #f7f7f7;
+  --bronze: #cd7f32;
+  --silver: #c0c0c0;
+  --gold: #ffd700;
+  --diamond: #b9f2ff;
+  --ruby: #e0115f;
+  --master: #9c27b0;
+  --gradient-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  --rank-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+body {
+  font-family: "Rajdhani", "Segoe UI", Tahoma, sans-serif;
+  background: var(--gradient-bg);
+  color: var(--light);
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 0;
+  flex: 1;
+}
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: "Oxanium", "Segoe UI", Tahoma, sans-serif;
+  margin-top: 0;
+  letter-spacing: 0.5px;
+}
+/* Navbar */
+.navbar {
+  background-color: rgba(26, 26, 46, 0.9);
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+.navbar-brand {
+  font-family: "Oxanium", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--secondary);
+  text-decoration: none;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+}
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+.nav-link {
+  color: var(--light);
+  text-decoration: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+.nav-link:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-2px);
+}
+.nav-link i {
+  margin-right: 5px;
+}
+/* Banner */
+.banner {
+  height: 50vh;
+  background-image: url("/static/images/gym-banner.jpg");
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  margin-bottom: 30px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.banner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(26, 26, 46, 0.9),
+    rgba(26, 26, 46, 0.5)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.banner-text {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--light);
+  text-align: center;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
+  font-family: "Oxanium", sans-serif;
+  letter-spacing: 1px;
+  animation: pulse 2s infinite;
+}
+/* Cards */
+.card {
+  background: rgba(26, 26, 46, 0.7);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 20px;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+.p-4 {
+  padding: 25px;
+}
+.p-3 {
+  padding: 20px;
+}
+.mb-4 {
+  margin-bottom: 25px;
+}
+.mb-3 {
+  margin-bottom: 15px;
+}
+.text-center {
+  text-align: center;
+}
+/* Rank Styles */
+.rank-icon {
+  font-size: 2rem;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+.rank-bronze {
+  color: var(--bronze);
+  text-shadow: var(--rank-shadow);
+}
+.rank-silver {
+  color: var(--silver);
+  text-shadow: var(--rank-shadow);
+}
+.rank-gold {
+  color: var(--gold);
+  text-shadow: var(--rank-shadow);
+}
+.rank-diamond {
+  color: var(--diamond);
+  text-shadow: var(--rank-shadow);
+}
+.rank-ruby {
+  color: var(--ruby);
+  text-shadow: var(--rank-shadow);
+}
+.rank-master {
+  color: var(--master);
+  text-shadow: var(--rank-shadow);
+}
+.rank-tiers {
+  list-style-type: none;
+  padding: 0;
+}
+.rank-tiers li {
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.rank-tiers li:last-child {
+  border-bottom: none;
+}
+.rank-tiers li i {
+  width: 30px;
+  text-align: center;
+  margin-right: 10px;
+}
+/* Progress Bar */
+.progress {
+  height: 15px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+.btn-primary {
+  background: linear-gradient(45deg, var(--primary-dark), var(--primary));
+  color: white;
+}
+.btn-primary:hover {
+  background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+}
+.btn-block {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+}
+.btn-link {
+  background: transparent;
+  color: var(--secondary);
+}
+/* Forms */
+.form-group {
+  margin-bottom: 20px;
+}
+.form-control {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--light);
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(255, 110, 64, 0.25);
+}
+label {
+  display: block;
+  margin-bottom: 5px;
+  color: rgba(255, 255, 255, 0.8);
+}
+/* Exercise logging modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+.modal-content {
+  background: var(--dark);
+  padding: 25px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+.close-modal {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.3s ease;
+}
+.close-modal:hover {
+  color: var(--light);
+}
+/* Grid Layout */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -15px;
+  justify-content: center;
+}
+.col-md-6 {
+  flex: 0 0 100%;
+  padding: 0 15px;
+}
+/* Stats Card */
+.stats-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 4px solid var(--secondary);
+}
+.stats-card-icon {
+  font-size: 2rem;
+  color: var(--secondary);
+}
+.stats-card-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.stats-card-label {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+/* Leaderboard */
+.leaderboard {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+.leaderboard th,
+.leaderboard td {
+  padding: 12px 15px;
+  text-align: left;
+}
+.leaderboard th {
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+}
+.leaderboard tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.leaderboard tr:last-child {
+  border-bottom: none;
+}
+.leaderboard .rank-cell {
+  text-align: center;
+  width: 50px;
+}
+.rank-highlight {
+  position: relative;
+  padding-left: 5px;
+}
+.rank-highlight::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+}
+.rank-highlight.bronze::before {
+  background-color: var(--bronze);
+}
+.rank-highlight.silver::before {
+  background-color: var(--silver);
+}
+.rank-highlight.gold::before {
+  background-color: var(--gold);
+}
+.rank-highlight.diamond::before {
+  background-color: var(--diamond);
+}
+.rank-highlight.ruby::before {
+  background-color: var(--ruby);
+}
+.rank-highlight.master::before {
+  background-color: var(--master);
+}
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 20px;
+  background-color: rgba(26, 26, 46, 0.9);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  margin-top: auto;
+}
+/* Achievements */
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+.achievement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 15px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+.achievement:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.1);
+}
+.achievement-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: var(--secondary);
+}
+.achievement.locked .achievement-icon {
+  color: rgba(255, 255, 255, 0.3);
+}
+.achievement-name {
+  font-weight: 600;
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+}
+.achievement.locked .achievement-name {
+  color: rgba(255, 255, 255, 0.5);
+}
+/* Animations */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.fadeIn {
+  animation: fadeIn 0.5s ease-in-out;
+}
+/* Responsive */
+@media (min-width: 768px) {
+  .col-md-6 {
+    flex: 0 0 50%;
+  }
+}
+@media (max-width: 767px) {
+  .banner-text {
+    font-size: 2rem;
+  }
+  .navbar {
+    padding: 10px 15px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .stats-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  .stats-card-icon {
+    margin-bottom: 10px;
+  }
+}
+/* Exercise form */
+.exercise-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+.exercise-form select {
+  grid-column: span 2;
+}
+/* Font imports */
+@import url("https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700&family=Rajdhani:wght@400;500;600;700&display=swap");

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <title>{% block title %}GameFit{% endblock %}</title>
+  </head>
+  <body>
+    <nav class="navbar">
+      <a class="navbar-brand" href="/"><i class="fas fa-fire"></i> GAMEFIT</a>
+      <div class="nav-links">
+        <a class="nav-link" href="/achievements"
+          ><i class="fas fa-medal"></i> Achievements</a
+        >
+        <a class="nav-link" href="/leaderboard"
+          ><i class="fas fa-trophy"></i> Leaderboard</a
+        >
+        {% if user %}
+        <a class="nav-link" href="#" id="logout-btn"
+          ><i class="fas fa-sign-out-alt"></i> Logout</a
+        >
+        {% else %}
+        <a class="nav-link" href="/auth"
+          ><i class="fas fa-sign-in-alt"></i> Login</a
+        >
+        {% endif %}
+      </div>
+    </nav>
+    {% block content %}{% endblock %}
+
+    <footer class="footer">
+      <div>
+        <i class="fas fa-gamepad"></i> &copy; 2025 GameFit. All rights reserved.
+      </div>
+      <div>Level up your fitness journey!</div>
+    </footer>
+    <!-- Log Exercise Modal -->
+    <div class="modal" id="exerciseModal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2><i class="fas fa-dumbbell"></i> Log Exercise</h2>
+        <form id="exercise-form" class="exercise-form">
+          <select id="exercise-type" class="form-control">
+            <option value="">Select Exercise Type</option>
+            <option value="pushup">Push-ups</option>
+            <option value="situp">Sit-ups</option>
+            <option value="squat">Squats</option>
+            <option value="pullup">Pull-ups</option>
+            <option value="burpee">Burpees</option>
+            <option value="plank">Plank (seconds)</option>
+            <option value="run">Running (minutes)</option>
+          </select>
+          <div class="form-group">
+            <label for="exercise-count">Count/Duration</label>
+            <input
+              type="number"
+              class="form-control"
+              id="exercise-count"
+              min="1"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="exercise-intensity">Intensity</label>
+            <select class="form-control" id="exercise-intensity">
+              <option value="1">Light</option>
+              <option value="1.5">Moderate</option>
+              <option value="2">Intense</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">
+            Submit
+          </button>
+        </form>
+      </div>
+    </div>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/main.js"></script>
+  </body>
+</html>

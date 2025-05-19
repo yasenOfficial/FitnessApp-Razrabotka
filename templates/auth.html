@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}GameFit - Login/Register{% endblock %}
+{% block content %}
+  <div class="container fadeIn">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-4 mx-auto">
+        <div class="card p-4">
+          <h2 id="form-title" class="text-center mb-4">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </h2>
+      <form id="auth-form">
+        <div class="form-group">
+          <label for="username"><i class="fas fa-user"></i> Username</label>
+          <input type="text" class="form-control" id="username" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="password"><i class="fas fa-lock"></i> Password</label>
+          <input type="password" class="form-control" id="password" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+        
+        <button type="button" class="btn btn-link btn-block" id="toggle-btn">
+          New player? Register here
+        </button>
+      </form>
+    </div>
+    
+    <div class="card p-3 mt-4 text-center">
+      <h4><i class="fas fa-info-circle"></i> Why Join GameFit?</h4>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="stats-card">
+            <i class="fas fa-fire-flame-curved stats-card-icon"></i>
+            <div>
+              <div class="stats-card-value">Track Progress</div>
+              <div class="stats-card-label">Monitor your fitness journey</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="stats-card">
+            <i class="fas fa-ranking-star stats-card-icon"></i>
+            <div>
+              <div class="stats-card-value">Earn Ranks</div>
+              <div class="stats-card-label">From Bronze to Master</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  </div>
+{% endblock %}

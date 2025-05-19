@@ -1,0 +1,163 @@
+{% extends 'base.html' %} {% block title %}GameFit - Level Up Your Fitness{%
+endblock %} {% block content %}
+
+<div class="banner">
+  <div class="banner-overlay">
+    <div class="banner-text">Push Your Limits. Earn Your Rank.</div>
+  </div>
+</div>
+<div class="container fadeIn">
+  {% if user %}
+  <div class="card p-4 mb-4">
+    <h2>
+      Welcome back, <span style="color: #ff6e40">{{ user.username }}</span>!
+    </h2>
+    <div class="stats-card">
+      <div>
+        <div class="stats-card-value">{{ user.exercise_points }}</div>
+        <div class="stats-card-label">Exercise Points</div>
+      </div>
+      <i class="fas fa-bolt stats-card-icon"></i>
+    </div>
+
+    <h4>
+      Current Rank: {% if user.get_rank() == 'Bronze' %}
+      <i class="fas fa-medal rank-bronze rank-icon"></i>
+      {% elif user.get_rank() == 'Silver' %}
+      <i class="fas fa-medal rank-silver rank-icon"></i>
+      {% elif user.get_rank() == 'Diamond' %}
+      <i class="fas fa-gem rank-diamond rank-icon"></i>
+      {% elif user.get_rank() == 'Ruby' %}
+      <i class="fas fa-gem rank-ruby rank-icon"></i>
+      {% elif user.get_rank() == 'Master' %}
+      <i class="fas fa-crown rank-master rank-icon"></i>
+      {% endif %}
+      <span
+        class="{% if user.get_rank() == 'Bronze' %}rank-bronze {% elif user.get_rank() == 'Silver' %}rank-silver {% elif user.get_rank() == 'Diamond' %}rank-diamond {% elif user.get_rank() == 'Ruby' %}rank-ruby {% elif user.get_rank() == 'Master' %}rank-master {% endif %}"
+        >{{ user.get_rank() }}</span
+      >
+    </h4>
+
+    <div class="progress mb-3">
+      <div
+        class="progress-bar"
+        style="width: {{ (user.exercise_points % 200) * 0.5 }}%;"
+      ></div>
+    </div>
+    <p class="mb-3">
+      {{ 200 - (user.exercise_points % 200) }} points until next rank
+    </p>
+
+    <button class="btn btn-primary" id="log-exercise-btn">
+      <i class="fas fa-dumbbell"></i> Log Exercise
+    </button>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card p-3">
+        <h3><i class="fas fa-chart-line"></i> Your Activity</h3>
+        <div class="stats-card">
+          <div>
+            <div class="stats-card-value">0</div>
+            <div class="stats-card-label">Today's Points</div>
+          </div>
+          <i class="fas fa-calendar-day stats-card-icon"></i>
+        </div>
+        <div class="stats-card">
+          <div>
+            <div class="stats-card-value">0</div>
+            <div class="stats-card-label">Weekly Points</div>
+          </div>
+          <i class="fas fa-calendar-week stats-card-icon"></i>
+        </div>
+        <div class="stats-card">
+          <div>
+            <div class="stats-card-value">{{ user.exercise_points }}</div>
+            <div class="stats-card-label">All-Time Points</div>
+          </div>
+          <i class="fas fa-infinity stats-card-icon"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card p-3">
+        <h3><i class="fas fa-award"></i> Recent Achievements</h3>
+        <div class="achievement-grid">
+          <div class="achievement">
+            <i class="fas fa-running achievement-icon"></i>
+            <div class="achievement-name">First Steps</div>
+          </div>
+          <div class="achievement locked">
+            <i class="fas fa-fire achievement-icon"></i>
+            <div class="achievement-name">Burn Baby Burn</div>
+          </div>
+          <div class="achievement locked">
+            <i class="fas fa-fist-raised achievement-icon"></i>
+            <div class="achievement-name">Unstoppable</div>
+          </div>
+        </div>
+        <a href="/achievements" class="btn btn-link">View All Achievements</a>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="card p-4 text-center mb-4">
+    <h2><i class="fas fa-gamepad"></i> Gamify Your Fitness Journey</h2>
+    <h3>Track workouts. Climb ranks. Challenge friends.</h3>
+    <p>
+      Transform your fitness routine into an exciting game where every rep
+      counts!
+    </p>
+    <div class="row" style="margin-top: 30px">
+      <div class="col-md-6">
+        <div class="card p-3">
+          <h4><i class="fas fa-medal"></i> Earn Ranks</h4>
+          <p>
+            Complete exercises to earn points and climb through exclusive rank
+            tiers.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card p-3">
+          <h4><i class="fas fa-trophy"></i> Compete</h4>
+          <p>Challenge friends and compare stats on our global leaderboards.</p>
+        </div>
+      </div>
+    </div>
+    <a class="btn btn-primary" style="margin-top: 20px" href="/auth">
+      <i class="fas fa-play"></i> Start Your Journey
+    </a>
+  </div>
+  {% endif %}
+
+  <div class="card p-3">
+    <h3><i class="fas fa-ranking-star"></i> Rank Tiers</h3>
+    <ul class="rank-tiers">
+      <li>
+        <i class="fas fa-medal rank-bronze"></i>
+        <strong class="rank-bronze">Bronze</strong>: 0–199 pts
+      </li>
+      <li>
+        <i class="fas fa-medal rank-silver"></i>
+        <strong class="rank-silver">Silver</strong>: 200–399 pts
+      </li>
+      <li>
+        <i class="fas fa-gem rank-diamond"></i>
+        <strong class="rank-diamond">Diamond</strong>: 400–699 pts
+      </li>
+      <li>
+        <i class="fas fa-gem rank-ruby"></i>
+        <strong class="rank-ruby">Ruby</strong>: 700–999 pts
+      </li>
+      <li>
+        <i class="fas fa-crown rank-master"></i>
+        <strong class="rank-master">Master</strong>: 1000+ pts
+      </li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
