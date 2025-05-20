@@ -1,232 +1,365 @@
-
-from flask import Flask, render_template, request, jsonify, send_from_directory, redirect
+from flask import (
+    Flask, render_template, request, jsonify,
+    send_from_directory, redirect, make_response, url_for
+)
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-import datetime
-import os
+from flask_jwt_extended import (
+    JWTManager, create_access_token,
+    jwt_required, get_jwt_identity
+)
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+from dotenv import load_dotenv
+import datetime, os
 from sqlalchemy import desc
 
+# Load env
+load_dotenv()
+
 app = Flask(__name__, static_folder='static')
-# Configuration
-app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gamefit.db'
+
+# --- Configuration ---
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
+
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(
+    minutes=int(os.getenv('JWT_EXPIRES_MINUTES', 15))
+)
 app.config['JWT_TOKEN_LOCATION'] = ['cookies']
-app.config['JWT_COOKIE_CSRF_PROTECT'] = False  # For simplicity, not using CSRF protection
+app.config['JWT_COOKIE_CSRF_PROTECT'] = False
+
+# **Use a consistent cookie name for JWT**
+app.config['JWT_ACCESS_COOKIE_NAME'] = 'access_token_cookie'
+
+# Mail settings
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = (
+    os.getenv('MAIL_DEFAULT_NAME'), os.getenv('MAIL_DEFAULT_EMAIL')
+)
+app.config['MAIL_DEBUG'] = True  # log mail actions
 
 # Extensions
-db = SQLAlchemy(app)
-bcrypt = Bcrypt(app)
-jwt = JWTManager(app)
+db    = SQLAlchemy(app)
+bcrypt= Bcrypt(app)
+jwt   = JWTManager(app)
+mail  = Mail(app)
+ts    = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
-# Models
+# Ensure the JWT "sub" (subject) is always a string
+@jwt.user_identity_loader
+def user_identity_lookup(identity):
+    return str(identity)
+
+
+# --- Models ---
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
-    exercise_points = db.Column(db.Integer, default=0)
-    join_date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    id                 = db.Column(db.Integer, primary_key=True)
+    username           = db.Column(db.String(80), unique=True, nullable=False)
+    email              = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash      = db.Column(db.String(128), nullable=False)
+    is_active          = db.Column(db.Boolean, default=False)
+    exercise_points    = db.Column(db.Integer, default=0)
+    join_date          = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     achievements_unlocked = db.Column(db.Integer, default=0)
-    
-    # Relationship
-    exercises = db.relationship('Exercise', backref='user', lazy=True)
+    exercises          = db.relationship('Exercise', backref='user', lazy=True)
 
-    def set_password(self, password):
-        self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+    def set_password(self, pw):
+        self.password_hash = bcrypt.generate_password_hash(pw).decode()
 
-    def check_password(self, password):
-        return bcrypt.check_password_hash(self.password_hash, password)
+    def check_password(self, pw):
+        return bcrypt.check_password_hash(self.password_hash, pw)
 
     def get_rank(self):
         pts = self.exercise_points
         if pts >= 1000: return 'Master'
-        if pts >= 700: return 'Ruby'
-        if pts >= 400: return 'Diamond'
-        if pts >= 200: return 'Silver'
+        if pts >= 700:  return 'Ruby'
+        if pts >= 400:  return 'Diamond'
+        if pts >= 200:  return 'Silver'
         return 'Bronze'
-    
+
     def calculate_achievements(self):
-        # Calculate how many achievements unlocked based on points
-        count = 0
-        if self.exercise_points >= 10: count += 1
-        if self.exercise_points >= 50: count += 1
-        if self.exercise_points >= 100: count += 1
-        if self.exercise_points >= 200: count += 1
-        if self.exercise_points >= 300: count += 1
-        if self.exercise_points >= 400: count += 1
-        if self.exercise_points >= 500: count += 1
-        if self.exercise_points >= 700: count += 1
-        if self.exercise_points >= 1000: count += 1
-        # Special achievements will be added later
-        self.achievements_unlocked = count
+        thresholds = [10,50,100,200,300,400,500,700,1000]
+        self.achievements_unlocked = sum(self.exercise_points>=t for t in thresholds)
         db.session.commit()
 
-class Exercise(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    exercise_type = db.Column(db.String(50), nullable=False)
-    count = db.Column(db.Integer, nullable=False)
-    intensity = db.Column(db.Float, nullable=False, default=1.0)
-    points = db.Column(db.Integer, nullable=False)
-    date_added = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-# Helper Functions
+class Exercise(db.Model):
+    id            = db.Column(db.Integer, primary_key=True)
+    user_id       = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    exercise_type = db.Column(db.String(50), nullable=False)
+    count         = db.Column(db.Integer, nullable=False)
+    intensity     = db.Column(db.Float, nullable=False, default=1.0)
+    points        = db.Column(db.Integer, nullable=False)
+    date_added    = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+
+# --- Helpers ---
 def get_current_user():
     try:
-        current_user_id = get_jwt_identity()
-        if current_user_id:
-            return User.query.get(current_user_id)
+        uid = get_jwt_identity()
+        return User.query.get(uid) if uid else None
     except:
-        pass
-    return None
+        return None
 
-# Routes
+
+# --- Routes ---
 @app.route('/')
 def home():
-    user = get_current_user()
-    return render_template('home.html', user=user)
+    return render_template('home.html', user=get_current_user())
+
 
 @app.route('/auth')
 def auth_page():
-    return render_template('auth.html')
+    confirmed = request.args.get('confirmed')
+    return render_template('auth.html', confirmed=bool(confirmed))
 
-@app.route('/leaderboard')
-def leaderboard():
-    user = get_current_user()
-    top_players = User.query.order_by(desc(User.exercise_points)).limit(20).all()
-    
-    # Find user's rank
-    user_rank = 0
-    if user:
-        all_users = User.query.order_by(desc(User.exercise_points)).all()
-        for i, u in enumerate(all_users):
-            if u.id == user.id:
-                user_rank = i + 1
-                break
-    
-    return render_template('leaderboard.html', user=user, top_players=top_players, user_rank=user_rank)
 
-@app.route('/achievements')
-def achievements():
-    user = get_current_user()
+@app.route('/confirm/<token>')
+def confirm_email(token):
+    try:
+        email = ts.loads(
+            token,
+            salt='email-confirm',
+            max_age=int(os.getenv('CONFIRM_EXPIRATION', 3600))
+        )
+    except SignatureExpired:
+        return "Link expired", 400
+    except BadSignature:
+        return "Invalid token", 400
+
+    user = User.query.filter_by(email=email).first()
     if user:
-        user.calculate_achievements()
-    return render_template('achievements.html', user=user)
+        user.is_active = True
+        db.session.commit()
+        return redirect('/auth?confirmed=1')
+    return "User not found", 404
+
 
 @app.route('/api/register', methods=['POST'])
 def api_register():
     data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    
-    if not username or not password:
-        return jsonify({'success': False, 'message': 'Username and password required'}), 400
-    
-    if User.query.filter_by(username=username).first():
-        return jsonify({'success': False, 'message': 'Username already exists'}), 409
-    
-    user = User(username=username)
-    user.set_password(password)
+    username, email, pw = data.get('username'), data.get('email'), data.get('password')
+    if not all([username, email, pw]):
+        return jsonify(success=False, message='All fields required'), 400
+
+    if User.query.filter((User.username==username)|(User.email==email)).first():
+        return jsonify(success=False, message='Username or email taken'), 409
+
+    # Create inactive user
+    user = User(username=username, email=email)
+    user.set_password(pw)
     db.session.add(user)
     db.session.commit()
-    
-    return jsonify({'success': True, 'message': 'Registered successfully'})
+
+    # Send confirmation email
+    token = ts.dumps(email, salt='email-confirm')
+    link  = url_for('confirm_email', token=token, _external=True)
+    msg   = Message("Confirm your GameFit account", recipients=[email])
+    msg.body = f"Hi {username}, please confirm here:\n\n{link}"
+    try:
+        mail.send(msg)
+    except Exception as e:
+        app.logger.error(f"Mail failed: {e}")
+
+    return jsonify(success=True, message='Registered! Check your email.'), 200
+
 
 @app.route('/api/login', methods=['POST'])
 def api_login():
     data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    
+    username, pw = data.get('username'), data.get('password')
     user = User.query.filter_by(username=username).first()
-    
-    if user and user.check_password(password):
-        access_token = create_access_token(identity=user.id)
-        response = jsonify({'success': True, 'message': 'Login successful'})
-        response.set_cookie('access_token', access_token, httponly=True, max_age=30*24*60*60)  # 30 days
-        return response
-    
-    return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
+
+    if not user or not user.check_password(pw):
+        return jsonify(success=False, message='Invalid credentials'), 401
+    if not user.is_active:
+        return jsonify(success=False, message='Please confirm email'), 403
+
+    token = create_access_token(identity=user.id)
+    resp  = jsonify(success=True, message='Login successful')
+    resp.set_cookie(
+        app.config['JWT_ACCESS_COOKIE_NAME'],  # access_token_cookie
+        token,
+        httponly=True,
+        max_age=int(os.getenv('JWT_EXPIRES_MINUTES', 15)) * 60
+    )
+    return resp
+
+
+@app.route('/leaderboard')
+@jwt_required()
+def leaderboard():
+    user = get_current_user() or redirect('/auth')
+    players = User.query.order_by(desc(User.exercise_points)).limit(20).all()
+    all_u   = User.query.order_by(desc(User.exercise_points)).all()
+    rank    = next((i+1 for i,u in enumerate(all_u) if u.id==user.id), 0)
+
+    resp    = make_response(
+        render_template('leaderboard.html', user=user,
+                        top_players=players, user_rank=rank)
+    )
+    # refresh session
+    new_token = create_access_token(identity=user.id)
+    resp.set_cookie(
+        app.config['JWT_ACCESS_COOKIE_NAME'],
+        new_token,
+        httponly=True,
+        max_age=int(os.getenv('JWT_EXPIRES_MINUTES', 15)) * 60
+    )
+    return resp
+
+
+@app.route('/achievements')
+@jwt_required()
+def achievements():
+    user = get_current_user() or redirect('/auth')
+    user.calculate_achievements()
+
+    resp = make_response(render_template('achievements.html', user=user))
+    new_token = create_access_token(identity=user.id)
+    resp.set_cookie(
+        app.config['JWT_ACCESS_COOKIE_NAME'],
+        new_token,
+        httponly=True,
+        max_age=int(os.getenv('JWT_EXPIRES_MINUTES', 15)) * 60
+    )
+    return resp
+
 
 @app.route('/api/log-exercise', methods=['POST'])
 @jwt_required()
 def log_exercise():
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    
+    uid  = get_jwt_identity()
+    user = User.query.get(uid)
     if not user:
-        return jsonify({'success': False, 'message': 'User not found'}), 404
-    
-    data = request.get_json()
-    exercise_type = data.get('exercise_type')
-    count = int(data.get('count', 0))
-    intensity = float(data.get('intensity', 1.0))
-    points = int(data.get('points', 0))
-    
-    if not exercise_type or count <= 0:
-        return jsonify({'success': False, 'message': 'Invalid exercise data'}), 400
-    
-    # Create exercise record
-    exercise = Exercise(
-        user_id=current_user_id,
-        exercise_type=exercise_type,
-        count=count,
-        intensity=intensity,
-        points=points
+        return jsonify(success=False, message='User not found'), 404
+
+    d   = request.get_json()
+    ex  = d.get('exercise_type')
+    cnt = int(d.get('count', 0))
+    inty = float(d.get('intensity', 1.0))
+    pts = int(d.get('points', 0))
+
+    if not ex or cnt <= 0:
+        return jsonify(success=False, message='Invalid data'), 400
+
+    e = Exercise(
+        user_id=uid,
+        exercise_type=ex,
+        count=cnt,
+        intensity=inty,
+        points=pts
     )
-    
-    # Update user points
-    user.exercise_points += points
-    
-    db.session.add(exercise)
+    user.exercise_points += pts
+    db.session.add(e)
     db.session.commit()
-    
-    # Update achievements
     user.calculate_achievements()
-    
-    return jsonify({
-        'success': True,
-        'message': f'Exercise logged! You earned {points} points!',
-        'new_total': user.exercise_points,
-        'rank': user.get_rank()
-    })
+
+    resp = make_response(jsonify(
+        success=True,
+        message=f'Logged {pts} points!',
+        new_total=user.exercise_points,
+        rank=user.get_rank()
+    ))
+    # refresh session
+    new_token = create_access_token(identity=uid)
+    resp.set_cookie(
+        app.config['JWT_ACCESS_COOKIE_NAME'],
+        new_token,
+        httponly=True,
+        max_age=int(os.getenv('JWT_EXPIRES_MINUTES', 15)) * 60
+    )
+    return resp
+
 
 @app.route('/api/logout', methods=['POST'])
 def logout():
-    response = jsonify({'success': True, 'message': 'Logged out successfully'})
-    response.delete_cookie('access_token')
-    return response
+    r = jsonify(success=True, message='Logged out')
+    r.delete_cookie(app.config['JWT_ACCESS_COOKIE_NAME'])
+    return r
+
 
 @app.route('/api/delete', methods=['DELETE'])
 @jwt_required()
 def api_delete():
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    
+    uid  = get_jwt_identity()
+    user = User.query.get(uid)
     if user:
         db.session.delete(user)
         db.session.commit()
-        response = jsonify({'success': True, 'message': 'User deleted'})
-        response.delete_cookie('access_token')
-        return response
-    
-    return jsonify({'success': False, 'message': 'User not found'}), 404
+        r = jsonify(success=True, message='Deleted')
+        r.delete_cookie(app.config['JWT_ACCESS_COOKIE_NAME'])
+        return r
+    return jsonify(success=False, message='Not found'), 404
 
-# Serve static files
-@app.route('/static/css/<path:filename>')
-def serve_css(filename):
-    return send_from_directory(os.path.join(app.root_path, 'static/css'), filename)
 
-@app.route('/static/js/<path:filename>')
-def serve_js(filename):
-    return send_from_directory(os.path.join(app.root_path, 'static/js'), filename)
+@app.route('/profile')
+@jwt_required()
+def profile():
+    user = get_current_user() or redirect('/auth')
+    resp = make_response(render_template('profile.html', user=user))
+    # refresh session
+    new_token = create_access_token(identity=user.id)
+    resp.set_cookie(
+        app.config['JWT_ACCESS_COOKIE_NAME'],
+        new_token,
+        httponly=True,
+        max_age=int(os.getenv('JWT_EXPIRES_MINUTES', 15)) * 60
+    )
+    return resp
 
-@app.route('/static/images/<path:filename>')
-def serve_images(filename):
-    return send_from_directory(os.path.join(app.root_path, 'static/images'), filename)
+@app.route('/profile/edit', methods=['GET', 'POST'])
+@jwt_required()
+def edit_profile():
+    user = get_current_user()
+    if not user:
+        return redirect('/auth')
+
+    if request.method == 'POST':
+        data = request.form
+        new_username = data.get('username').strip()
+        new_email    = data.get('email').strip()
+        new_password = data.get('password').strip()
+
+        # basic validation
+        if not new_username or not new_email:
+            error = "Username and email cannot be empty."
+            return render_template('profile_edit.html', user=user, error=error)
+
+        # check uniqueness
+        if new_username != user.username and User.query.filter_by(username=new_username).first():
+            error = "That username is already taken."
+            return render_template('profile_edit.html', user=user, error=error)
+
+        if new_email != user.email and User.query.filter_by(email=new_email).first():
+            error = "That email is already in use."
+            return render_template('profile_edit.html', user=user, error=error)
+
+        # apply changes
+        user.username = new_username
+        user.email    = new_email
+        if new_password:
+            user.set_password(new_password)
+        db.session.commit()
+
+        return redirect('/profile')
+
+    # GET — render form
+    return render_template('profile_edit.html', user=user)
+
+
+# Static files
+@app.route('/static/<path:p>')
+def static_serve(p):
+    return send_from_directory('static', p)
+
 
 if __name__ == '__main__':
     with app.app_context():

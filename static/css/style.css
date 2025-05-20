@@ -33,6 +33,7 @@ body {
   margin: 0 auto;
   padding: 20px 0;
   flex: 1;
+  justify-content: center;
 }
 /* Typography */
 h1,

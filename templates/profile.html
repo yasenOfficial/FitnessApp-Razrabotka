@@ -1,0 +1,39 @@
+{% extends 'base.html' %} {% block title %}GameFit – Profile{% endblock %} {%
+block content %}
+<div class="container fadeIn mt-5 fadeIn">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4 mx-auto">
+      <h2 class="text-center mb-4">
+        <i class="fas fa-user"></i> {{ user.username }}'s Profile
+      </h2>
+      <div class="stats-card mb-3">
+        <div>
+          <div class="stats-card-value">{{ user.email }}</div>
+          <div class="stats-card-label">Email</div>
+        </div>
+        <i class="fas fa-envelope stats-card-icon"></i>
+      </div>
+      <div class="stats-card mb-3">
+        <div>
+          <div class="stats-card-value">{{ user.exercise_points }}</div>
+          <div class="stats-card-label">Exercise Points</div>
+        </div>
+        <i class="fas fa-bolt stats-card-icon"></i>
+      </div>
+      <div class="stats-card mb-3">
+        <div>
+          <div class="stats-card-value">{{ user.get_rank() }}</div>
+          <div class="stats-card-label">Current Rank</div>
+        </div>
+        <i class="fas fa-chart-line stats-card-icon"></i>
+      </div>
+      <div class="d-flex justify-content-between mt-4">
+        <a href="/profile/edit" class="btn btn-secondary">Edit Profile</a>
+        <button id="delete-profile" class="btn btn-danger">
+          Delete Account
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

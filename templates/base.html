@@ -1,44 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
     <link rel="stylesheet" href="/static/css/style.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <title>{% block title %}GameFit{% endblock %}</title>
   </head>
   <body>
     <nav class="navbar">
       <a class="navbar-brand" href="/"><i class="fas fa-fire"></i> GAMEFIT</a>
       <div class="nav-links">
-        <a class="nav-link" href="/achievements"
-          ><i class="fas fa-medal"></i> Achievements</a
-        >
-        <a class="nav-link" href="/leaderboard"
-          ><i class="fas fa-trophy"></i> Leaderboard</a
-        >
+        <a class="nav-link" href="/achievements"><i class="fas fa-medal"></i> Achievements</a>
+        <a class="nav-link" href="/leaderboard"><i class="fas fa-trophy"></i> Leaderboard</a>
         {% if user %}
-        <a class="nav-link" href="#" id="logout-btn"
-          ><i class="fas fa-sign-out-alt"></i> Logout</a
-        >
+          <a class="nav-link" href="/profile"><i class="fas fa-user-circle"></i> My Profile</a>
+          <a class="nav-link" href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
         {% else %}
-        <a class="nav-link" href="/auth"
-          ><i class="fas fa-sign-in-alt"></i> Login</a
-        >
+          <a class="nav-link" href="/auth"><i class="fas fa-sign-in-alt"></i> Login</a>
         {% endif %}
       </div>
     </nav>
+
     {% block content %}{% endblock %}
 
     <footer class="footer">
-      <div>
-        <i class="fas fa-gamepad"></i> &copy; 2025 GameFit. All rights reserved.
-      </div>
+      <div><i class="fas fa-gamepad"></i> &copy; 2025 GameFit. All rights reserved.</div>
       <div>Level up your fitness journey!</div>
     </footer>
+
     <!-- Log Exercise Modal -->
     <div class="modal" id="exerciseModal">
       <div class="modal-content">
@@ -79,7 +68,14 @@
         </form>
       </div>
     </div>
-    <script src="/static/js/auth.js"></script>
-    <script src="/static/js/main.js"></script>
+
+    {% block scripts %}
+      <script src="/static/js/auth_toggle.js"></script>
+      <script src="/static/js/auth.js"></script>
+      <script src="/static/js/main.js"></script>
+      {% if request.path=='/profile' %}
+        <script src="/static/js/profile.js"></script>
+      {% endif %}
+    {% endblock %}
   </body>
 </html>
