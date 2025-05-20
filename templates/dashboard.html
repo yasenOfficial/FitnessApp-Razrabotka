@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}GameFit – Dashboard{% endblock %}
+{% block content %}
+<div class="container mt-5 fadeIn">
+  <h2 class="mb-4"><i class="fas fa-th-large"></i> Dashboard</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, msg in messages %}
+        <div class="alert alert-{{ category }}">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="card p-4 mb-4">
+    <h4>Today's Routine</h4>
+    <form method="POST">
+      <div class="row">
+        {% for ex in daily_routine %}
+        <div class="col-12 col-md-6 mb-3">
+          <label for="{{ ex.type }}">{{ ex.label }}</label>
+          <input
+            type="number"
+            class="form-control"
+            id="{{ ex.type }}"
+            name="{{ ex.type }}"
+            min="0"
+            placeholder="0"
+          >
+          <small>
+            Total done: {{ per_ex_ranks[ex.type].total }} —
+            Rank: {{ per_ex_ranks[ex.type].rank }}
+          </small>
+        </div>
+        {% endfor %}
+      </div>
+      <button type="submit" class="btn btn-primary">
+        Log All
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

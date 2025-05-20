@@ -1,6 +1,6 @@
 from flask import (
     Flask, render_template, request, jsonify,
-    send_from_directory, redirect, make_response, url_for
+    send_from_directory, redirect, make_response, url_for, flash
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -197,6 +197,8 @@ def api_login():
 @jwt_required()
 def leaderboard():
     user = get_current_user() or redirect('/auth')
+    if not user:
+        return redirect('/auth')
     players = User.query.order_by(desc(User.exercise_points)).limit(20).all()
     all_u   = User.query.order_by(desc(User.exercise_points)).all()
     rank    = next((i+1 for i,u in enumerate(all_u) if u.id==user.id), 0)
@@ -220,6 +222,8 @@ def leaderboard():
 @jwt_required()
 def achievements():
     user = get_current_user() or redirect('/auth')
+    if not user:
+        return redirect('/auth')
     user.calculate_achievements()
 
     resp = make_response(render_template('achievements.html', user=user))
@@ -360,6 +364,91 @@ def edit_profile():
 def static_serve(p):
     return send_from_directory('static', p)
 
+# --- Dashboard: daily routine + log form + per-exercise rank ---
+@app.route('/dashboard', methods=['GET', 'POST'])
+@jwt_required()
+def dashboard():
+    user = get_current_user()
+    if not user:
+        return redirect('/auth')
+
+    # Static daily routine suggestion
+    daily_routine = [
+        {'type': 'pushup', 'label': 'Push-ups'},
+        {'type': 'situp',  'label': 'Sit-ups'},
+        {'type': 'squat',  'label': 'Squats'},
+        {'type': 'burpee', 'label': 'Burpees'},
+        {'type': 'run',    'label': 'Running (minutes)'}
+    ]
+
+    # Handle form submission
+    if request.method == 'POST':
+        logged_any = False
+        for ex in daily_routine:
+            cnt = int(request.form.get(ex['type'], 0))
+            if cnt > 0:
+                # compute points per type
+                multipliers = {
+                    'pushup': 0.5,
+                    'situp':  0.3,
+                    'squat':  0.4,
+                    'pullup': 1.0,
+                    'burpee': 1.5,
+                    'plank':  0.1,
+                    'run':    2.0
+                }
+                base = multipliers.get(ex['type'], 0.5) * cnt
+                pts = round(base)
+                # create record
+                exercise = Exercise(
+                    user_id=user.id,
+                    exercise_type=ex['type'],
+                    count=cnt,
+                    intensity=1.0,
+                    points=pts
+                )
+                user.exercise_points += pts
+                db.session.add(exercise)
+                logged_any = True
+
+        if logged_any:
+            db.session.commit()
+            user.calculate_achievements()
+            flash('Exercises logged!', 'success')
+        else:
+            flash('Enter at least one exercise count.', 'warning')
+
+        return redirect('/dashboard')
+
+    # Compute per-exercise totals & rank
+    # rank thresholds by count
+    rank_levels = [
+        (1000, 'Master'),
+        (700,  'Ruby'),
+        (400,  'Diamond'),
+        (200,  'Silver'),
+        (0,    'Bronze')
+    ]
+    per_ex_ranks = {}
+    for ex in daily_routine:
+        total = db.session.query(db.func.sum(Exercise.count)) \
+            .filter_by(user_id=user.id, exercise_type=ex['type']) \
+            .scalar() or 0
+        # find rank
+        for thresh, name in rank_levels:
+            if total >= thresh:
+                per_ex_ranks[ex['type']] = {
+                    'total': total,
+                    'rank': name
+                }
+                break
+
+    return render_template(
+        'dashboard.html',
+        user=user,
+        daily_routine=daily_routine,
+        per_ex_ranks=per_ex_ranks
+    )
 
 if __name__ == '__main__':
     with app.app_context():
