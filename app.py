@@ -105,13 +105,17 @@ def get_current_user():
         return None
 
 # Dashboard-specific rank thresholds
+# at the top, where EXERCISE_RANKS lives:
 EXERCISE_RANKS = {
     'pushup': [(2000,'Mythic'),(1000,'Master'),(700,'Ruby'),(400,'Diamond'),(200,'Silver'),(0,'Bronze')],
     'situp':  [(3000,'Mythic'),(1500,'Master'),(1000,'Ruby'),(500,'Diamond'), (200,'Silver'),(0,'Bronze')],
     'squat':  [(2500,'Mythic'),(1200,'Master'),(800,'Ruby'), (500,'Diamond'), (200,'Silver'),(0,'Bronze')],
     'burpee': [(1000,'Mythic'),(700,'Master'), (400,'Ruby'),  (200,'Diamond'), (100,'Silver'),(0,'Bronze')],
     'run':    [(5000,'Mythic'),(2000,'Master'),(1000,'Ruby'), (500,'Diamond'), (200,'Silver'),(0,'Bronze')],
+    'pullup': [(1500,'Mythic'),(800,'Master'), (500,'Ruby'),  (300,'Diamond'), (100,'Silver'), (0,'Bronze')],
+    'plank':  [(10000,'Mythic'),(5000,'Master'),(2000,'Ruby'),(1000,'Diamond'), (500,'Silver'), (0,'Bronze')],
 }
+
 
 # Routes
 @app.route('/')
@@ -245,31 +249,112 @@ def edit_profile():
         return redirect('/profile')
     return render_template('profile_edit.html',user=user)
 
-@app.route('/dashboard',methods=['GET','POST'])
+@app.route('/dashboard', methods=['GET', 'POST'])
 @jwt_required()
 def dashboard():
-    user=get_current_user() or redirect('/auth')
-    daily_routine=[{'type':'pushup','label':'Push-ups'},{'type':'situp','label':'Sit-ups'},{'type':'squat','label':'Squats'},{'type':'burpee','label':'Burpees'},{'type':'run','label':'Running (minutes)'}]
-    if request.method=='POST':
-        logged=False
+    user = get_current_user() or redirect('/auth')
+
+    # Now includes icon and description
+    daily_routine = [
+        {
+            'type': 'pushup',
+            'label': 'Push-ups',
+            'icon': 'dumbbell',
+            'description': 'Targets chest, shoulders, and triceps'
+        },
+        {
+            'type': 'situp',
+            'label': 'Sit-ups',
+            'icon': 'child',
+            'description': 'Strengthens your core and abs'
+        },
+        {
+            'type': 'squat',
+            'label': 'Squats',
+            'icon': 'walking',
+            'description': 'Builds quads and glutes'
+        },
+        {
+            'type': 'pullup',
+            'label': 'Pull-ups',
+            'icon': 'person-booth',
+            'description': 'Works your back and biceps'
+        },
+        {
+            'type': 'burpee',
+            'label': 'Burpees',
+            'icon': 'running',
+            'description': 'Full-body conditioning'
+        },
+        {
+            'type': 'plank',
+            'label': 'Plank (sec)',
+            'icon': 'hourglass-start',
+            'description': 'Core stabilization and endurance'
+        },
+        {
+            'type': 'run',
+            'label': 'Running (min)',
+            'icon': 'running',
+            'description': 'Cardio, legs, and stamina'
+        },
+    ]
+
+    if request.method == 'POST':
+        logged_any = False
         for ex in daily_routine:
-            cnt=int(request.form.get(ex['type'],0))
-            if cnt>0:
-                mult={'pushup':0.5,'situp':0.3,'squat':0.4,'pullup':1.0,'burpee':1.5,'plank':0.1,'run':2.0}
-                pts=round(mult.get(ex['type'],0.5)*cnt)
-                e=Exercise(user_id=user.id,exercise_type=ex['type'],count=cnt,intensity=1.0,points=pts)
-                user.exercise_points+=pts;db.session.add(e);logged=True
-        if logged: db.session.commit();user.calculate_achievements();flash('Exercises logged!','success')
-        else: flash('Enter at least one exercise count.','warning')
+            cnt = int(request.form.get(ex['type'], 0))
+            if cnt > 0:
+                multipliers = {
+                    'pushup': 0.5,
+                    'situp': 0.3,
+                    'squat': 0.4,
+                    'pullup': 1.0,
+                    'burpee': 1.5,
+                    'plank': 0.1,
+                    'run': 2.0
+                }
+                pts = round(multipliers.get(ex['type'], 0.5) * cnt)
+                exercise = Exercise(
+                    user_id=user.id,
+                    exercise_type=ex['type'],
+                    count=cnt,
+                    intensity=1.0,
+                    points=pts
+                )
+                user.exercise_points += pts
+                db.session.add(exercise)
+                logged_any = True
+
+        if logged_any:
+            db.session.commit()
+            user.calculate_achievements()
+            flash('Exercises logged!', 'success')
+        else:
+            flash('Enter at least one exercise count.', 'warning')
+
         return redirect('/dashboard')
-    per_ex_ranks={}
+
+    # Compute per-exercise totals & ranks
+    per_ex_ranks = {}
     for ex in daily_routine:
-        total=db.session.query(db.func.sum(Exercise.count)).filter_by(user_id=user.id,exercise_type=ex['type']).scalar() or 0
-        for thresh,name in EXERCISE_RANKS[ex['type']]:
-            if total>=thresh:
-                per_ex_ranks[ex['type']]={'total':total,'rank':name}
+        total = db.session.query(db.func.sum(Exercise.count)) \
+            .filter_by(user_id=user.id, exercise_type=ex['type']) \
+            .scalar() or 0
+
+        # determine rank based on your EXERCISE_RANKS table
+        for thresh, name in EXERCISE_RANKS[ex['type']]:
+            if total >= thresh:
+                per_ex_ranks[ex['type']] = {'total': total, 'rank': name}
                 break
-    return render_template('dashboard.html',user=user,daily_routine=daily_routine,per_ex_ranks=per_ex_ranks)
+
+    return render_template(
+        'dashboard.html',
+        user=user,
+        daily_routine=daily_routine,
+        per_ex_ranks=per_ex_ranks
+    )
+
 
 @app.route('/static/<path:p>')
 def static_serve(p):
