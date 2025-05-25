@@ -12,32 +12,44 @@
     {% endif %}
   {% endwith %}
 
-  <div class="card p-4 mb-4">
-    <h4>Today's Routine</h4>
-    <form method="POST">
-      <div class="row">
-        {% for ex in daily_routine %}
-        <div class="col-12 col-md-6 mb-3">
-          <label for="{{ ex.type }}">{{ ex.label }}</label>
-          <input
-            type="number"
-            class="form-control"
-            id="{{ ex.type }}"
-            name="{{ ex.type }}"
-            min="0"
-            placeholder="0"
-          >
-          <small>
-            Total done: {{ per_ex_ranks[ex.type].total }} —
-            Rank: {{ per_ex_ranks[ex.type].rank }}
-          </small>
+  <div class="row">
+    {% for ex in daily_routine %}
+    <div class="col-12 col-md-6 mb-4">
+      <div class="card p-4">
+        <div class="d-flex align-items-center mb-2">
+          <i class="fas fa-{{ ex.icon }} fa-2x mr-3"></i>
+          <h5 class="mb-0">{{ ex.label }}</h5>
         </div>
-        {% endfor %}
+        <p class="mb-1"><em>{{ ex.description }}</em></p>
+        <p>
+          Total done: <strong>{{ per_ex_ranks[ex.type].total }}</strong>
+        </p>
+        <p>
+          Rank:
+          <strong>
+            <i class="fas fa-medal rank-{{ per_ex_ranks[ex.type].rank|lower }}"></i>
+            {{ per_ex_ranks[ex.type].rank }}
+          </strong>
+        </p>
+        <form method="POST" action="/dashboard">
+          <div class="form-group">
+            <label for="{{ ex.type }}">Add {{ ex.label }} count</label>
+            <input
+              type="number"
+              class="form-control"
+              id="{{ ex.type }}"
+              name="{{ ex.type }}"
+              min="0"
+              placeholder="0"
+            >
+          </div>
+          <button type="submit" class="btn btn-primary">
+            Log {{ ex.label }}
+          </button>
+        </form>
       </div>
-      <button type="submit" class="btn btn-primary">
-        Log All
-      </button>
-    </form>
+    </div>
+    {% endfor %}
   </div>
 </div>
 {% endblock %}
