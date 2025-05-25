@@ -157,59 +157,123 @@ def api_register():
     except Exception as ex: app.logger.error(f"Mail failed: {ex}")
     return jsonify(success=True,message='Registered! Check your email.'),200
 
-@app.route('/api/login',methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def api_login():
-    d=request.get_json();u,p=d.get('username'),d.get('password')
-    user=User.query.filter_by(username=u).first()
-    if not user or not user.check_password(p):
-        return jsonify(success=False,message='Invalid credentials'),401
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    user = User.query.filter_by(username=username).first()
+
+    if not user or not user.check_password(password):
+        return jsonify(success=False, message='Invalid credentials'), 401
     if not user.is_active:
-        return jsonify(success=False,message='Please confirm email'),403
-    tok=create_access_token(identity=user.id)
-    r=jsonify(success=True,message='Login successful')
-    r.set_cookie(app.config['JWT_ACCESS_COOKIE_NAME'],tok,httponly=True,
-                 max_age=int(os.getenv('JWT_EXPIRES_MINUTES',15))*60)
-    return r
+        return jsonify(success=False, message='Please confirm email'), 403
+
+    token = create_access_token(identity=user.id)
+    response = jsonify(success=True, message='Login successful')
+    response.set_cookie(
+        app.config['JWT_ACCESS_COOKIE_NAME'],
+        token,
+        httponly=True,
+        secure=True,
+        samesite='Lax',
+        max_age=int(os.getenv('JWT_EXPIRES_MINUTES', 15)) * 60
+    )
+    return response
 
 @app.route('/leaderboard')
 @jwt_required()
 def leaderboard():
-    user=get_current_user() or redirect('/auth')
-    players=User.query.order_by(desc(User.exercise_points)).limit(20).all()
-    all_u=User.query.order_by(desc(User.exercise_points)).all()
-    rank=next((i+1 for i,u in enumerate(all_u) if u.id==user.id),0)
-    resp=make_response(render_template('leaderboard.html',user=user,top_players=players,user_rank=rank))
-    nt=create_access_token(identity=user.id)
-    resp.set_cookie(app.config['JWT_ACCESS_COOKIE_NAME'],nt,httponly=True,
-                    max_age=int(os.getenv('JWT_EXPIRES_MINUTES',15))*60)
-    return resp
+    user = get_current_user()
+    if not user:
+        return redirect('/auth')
+
+    top_players = User.query.order_by(desc(User.exercise_points)).limit(20).all()
+    all_users = User.query.order_by(desc(User.exercise_points)).all()
+    user_rank = next((i+1 for i, u in enumerate(all_users) if u.id == user.id), 0)
+
+    response = make_response(render_template(
+        'leaderboard.html',
+        user=user,
+        top_players=top_players,
+        user_rank=user_rank
+    ))
+    new_token = create_access_token(identity=user.id)
+    response.set_cookie(
+        app.config['JWT_ACCESS_COOKIE_NAME'],
+        new_token,
+        httponly=True,
+        secure=True,
+        samesite='Lax',
+        max_age=int(os.getenv('JWT_EXPIRES_MINUTES', 15)) * 60
+    )
+    return response
+
 
 @app.route('/achievements')
 @jwt_required()
 def achievements():
-    user=get_current_user() or redirect('/auth')
-    user.calculate_achievements()
-    resp=make_response(render_template('achievements.html',user=user))
-    nt=create_access_token(identity=user.id)
-    resp.set_cookie(app.config['JWT_ACCESS_COOKIE_NAME'],nt,httponly=True,
-                    max_age=int(os.getenv('JWT_EXPIRES_MINUTES',15))*60)
-    return resp
+    user = get_current_user()
+    if not user:
+        return redirect('/auth')
 
-@app.route('/api/log-exercise',methods=['POST'])
+    user.calculate_achievements()
+    response = make_response(render_template('achievements.html', user=user))
+    new_token = create_access_token(identity=user.id)
+    response.set_cookie(
+        app.config['JWT_ACCESS_COOKIE_NAME'],
+        new_token,
+        httponly=True,
+        secure=True,
+        samesite='Lax',
+        max_age=int(os.getenv('JWT_EXPIRES_MINUTES', 15)) * 60
+    )
+    return response
+
+
+@app.route('/api/log-exercise', methods=['POST'])
 @jwt_required()
 def log_exercise():
-    uid=get_jwt_identity();user=User.query.get(uid)
-    if not user: return jsonify(success=False,message='User not found'),404
-    d=request.get_json();ex=d.get('exercise_type');cnt=int(d.get('count',0));
-    pts=int(d.get('points',0));
-    if not ex or cnt<=0: return jsonify(success=False,message='Invalid data'),400
-    e=Exercise(user_id=uid,exercise_type=ex,count=cnt,intensity=1.0,points=pts)
-    user.exercise_points+=pts;db.session.add(e);db.session.commit();user.calculate_achievements()
-    resp=make_response(jsonify(success=True,message=f'Logged {pts} points!',new_total=user.exercise_points,rank=user.get_rank()))
-    nt=create_access_token(identity=uid)
-    resp.set_cookie(app.config['JWT_ACCESS_COOKIE_NAME'],nt,httponly=True,
-                    max_age=int(os.getenv('JWT_EXPIRES_MINUTES',15))*60)
-    return resp
+    uid = get_jwt_identity()
+    user = User.query.get(uid)
+    if not user:
+        return jsonify(success=False, message='User not found'), 404
+
+    data = request.get_json()
+    exercise_type = data.get('exercise_type')
+    count = int(data.get('count', 0))
+    points = int(data.get('points', 0))
+    if not exercise_type or count <= 0:
+        return jsonify(success=False, message='Invalid exercise data'), 400
+
+    exercise = Exercise(
+        user_id=uid,
+        exercise_type=exercise_type,
+        count=count,
+        intensity=1.0,
+        points=points
+    )
+    user.exercise_points += points
+    db.session.add(exercise)
+    db.session.commit()
+    user.calculate_achievements()
+
+    response = make_response(jsonify(
+        success=True,
+        message=f'Exercise logged! You earned {points} points!',
+        new_total=user.exercise_points,
+        rank=user.get_rank()
+    ))
+    new_token = create_access_token(identity=uid)
+    response.set_cookie(
+        app.config['JWT_ACCESS_COOKIE_NAME'],
+        new_token,
+        httponly=True,
+        secure=True,
+        samesite='Lax',
+        max_age=int(os.getenv('JWT_EXPIRES_MINUTES', 15)) * 60
+    )
+    return response
 
 @app.route('/api/logout',methods=['POST'])
 def logout():
@@ -227,12 +291,21 @@ def api_delete():
 @app.route('/profile')
 @jwt_required()
 def profile():
-    user=get_current_user() or redirect('/auth')
-    resp=make_response(render_template('profile.html',user=user))
-    nt=create_access_token(identity=user.id)
-    resp.set_cookie(app.config['JWT_ACCESS_COOKIE_NAME'],nt,httponly=True,
-                    max_age=int(os.getenv('JWT_EXPIRES_MINUTES',15))*60)
-    return resp
+    user = get_current_user()
+    if not user:
+        return redirect('/auth')
+
+    response = make_response(render_template('profile.html', user=user))
+    new_token = create_access_token(identity=user.id)
+    response.set_cookie(
+        app.config['JWT_ACCESS_COOKIE_NAME'],
+        new_token,
+        httponly=True,
+        secure=True,
+        samesite='Lax',
+        max_age=int(os.getenv('JWT_EXPIRES_MINUTES', 15)) * 60
+    )
+    return response
 
 @app.route('/profile/edit',methods=['GET','POST'])
 @jwt_required()
