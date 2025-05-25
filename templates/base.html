@@ -89,11 +89,12 @@
     </div>
 
     {% block scripts %}
-    <script src="/static/js/auth_toggle.js"></script>
-    <script src="/static/js/auth.js"></script>
-    <script src="/static/js/main.js"></script>
-    {% if request.path=='/profile' %}
-    <script src="/static/js/profile.js"></script>
-    {% endif %} {% endblock %}
+      <script src="/static/js/auth_toggle.js"></script>
+      <script src="/static/js/auth.js"></script>
+      <script src="/static/js/main.js"></script>
+      {% if request.path == '/profile' %}
+        <script src="/static/js/profile.js"></script>
+      {% endif %}
+    {% endblock %}
   </body>
 </html>
