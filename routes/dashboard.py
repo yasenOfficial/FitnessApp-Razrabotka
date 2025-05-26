@@ -1,10 +1,54 @@
-from flask import render_template, redirect, request, flash
+from flask import render_template, redirect, request, flash, jsonify
 from flask_jwt_extended import jwt_required
 from extensions import db
 from models import Exercise
 from models.constants import EXERCISE_RANKS
 from utils.helpers import get_current_user
 from . import dashboard_bp
+from datetime import datetime, timedelta
+from sqlalchemy import func
+
+@dashboard_bp.route('/api/exercise-stats/<exercise_type>')
+@jwt_required()
+def exercise_stats(exercise_type):
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    # Get the last 30 days of data
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=30)
+    
+    # Query exercise data grouped by date
+    stats = db.session.query(
+        func.date(Exercise.date_added).label('date'),
+        func.sum(Exercise.count).label('count')
+    ).filter(
+        Exercise.user_id == user.id,
+        Exercise.exercise_type == exercise_type,
+        Exercise.date_added >= start_date,
+        Exercise.date_added <= end_date
+    ).group_by(
+        func.date(Exercise.date_added)
+    ).order_by(
+        func.date(Exercise.date_added)
+    ).all()
+
+    # Create a complete date range with zeros for missing dates
+    date_range = []
+    counts = []
+    current_date = start_date.date()
+    stats_dict = {stat.date: stat.count for stat in stats}
+    
+    while current_date <= end_date.date():
+        date_range.append(current_date.strftime('%Y-%m-%d'))
+        counts.append(stats_dict.get(current_date, 0))
+        current_date += timedelta(days=1)
+
+    return jsonify({
+        'dates': date_range,
+        'counts': counts
+    })
 
 @dashboard_bp.route('/', methods=['GET', 'POST'])
 @jwt_required()
@@ -59,11 +103,27 @@ def dashboard():
         },
     ]
 
+    # Generate available dates (today and 2 days back)
+    today = datetime.now().date()
+    available_dates = [today - timedelta(days=i) for i in range(2, -1, -1)]
+
     if request.method == 'POST':
         logged_any = False
         for ex in daily_routine:
             count = int(request.form.get(ex['type'], 0))
+            date_str = request.form.get(f"{ex['type']}_date")
+            
             if count > 0:
+                # Validate date
+                try:
+                    exercise_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                    if exercise_date > today or exercise_date < today - timedelta(days=2):
+                        flash('Invalid date selected. Please choose a date between today and 2 days ago.', 'error')
+                        return redirect('/dashboard')
+                except (ValueError, TypeError):
+                    flash('Invalid date format.', 'error')
+                    return redirect('/dashboard')
+
                 multipliers = {
                     'pushup': 0.5,
                     'situp': 0.3,
@@ -79,7 +139,8 @@ def dashboard():
                     exercise_type=ex['type'],
                     count=count,
                     intensity=1.0,
-                    points=points
+                    points=points,
+                    date_added=datetime.combine(exercise_date, datetime.min.time())
                 )
                 user.exercise_points += points
                 db.session.add(exercise)
@@ -88,7 +149,6 @@ def dashboard():
         if logged_any:
             db.session.commit()
             user.calculate_achievements()
-            flash('Exercises logged!', 'success')
         else:
             flash('Enter at least one exercise count.', 'warning')
 
@@ -111,5 +171,6 @@ def dashboard():
         'dashboard.html',
         user=user,
         daily_routine=daily_routine,
-        per_ex_ranks=per_ex_ranks
+        per_ex_ranks=per_ex_ranks,
+        available_dates=available_dates
     ) 
