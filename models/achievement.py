@@ -1,6 +1,7 @@
 from extensions import db
 from datetime import datetime
 
+
 class Achievement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -12,4 +13,4 @@ class Achievement(db.Model):
     user = db.relationship('User', back_populates='achievements')
 
     def __repr__(self):
-        return f'<Achievement {self.name}>' 
+        return f'<Achievement {self.name}>'

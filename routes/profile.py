@@ -5,6 +5,7 @@ from models import User
 from utils.helpers import get_current_user
 from . import profile_bp
 
+
 @profile_bp.route('/')
 @jwt_required()
 def profile():
@@ -23,6 +24,7 @@ def profile():
         max_age=900  # 15 minutes
     )
     return response
+
 
 @profile_bp.route('/edit', methods=['GET', 'POST'])
 @jwt_required()
@@ -54,4 +56,4 @@ def edit_profile():
         db.session.commit()
         return redirect('/profile')
 
-    return render_template('profile_edit.html', user=user) 
+    return render_template('profile_edit.html', user=user)

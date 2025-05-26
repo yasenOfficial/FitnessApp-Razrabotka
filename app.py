@@ -15,6 +15,7 @@ from flask_swagger_ui import get_swaggerui_blueprint
 from routes import register_blueprints
 from utils.errors import init_error_handlers
 
+
 def create_app(config_class=Config):
     app = Flask(__name__, static_folder='static')
     app.config.from_object(config_class)
@@ -40,7 +41,8 @@ def create_app(config_class=Config):
     register_blueprints(app)
 
     # Register API blueprint
-    from routes.api.v1 import api_v1
+    from routes.api.v1 import api_v1, register_routes
+    register_routes()
     app.register_blueprint(api_v1)
 
     # Swagger UI
@@ -60,6 +62,7 @@ def create_app(config_class=Config):
         return send_file('swagger.yaml')
 
     return app
+
 
 app = create_app()
 

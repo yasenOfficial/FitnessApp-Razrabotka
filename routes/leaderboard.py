@@ -14,7 +14,7 @@ def leaderboard():
 
     top_players = User.query.order_by(desc(User.exercise_points)).limit(20).all()
     all_users = User.query.order_by(desc(User.exercise_points)).all()
-    user_rank = next((i+1 for i, u in enumerate(all_users) if u.id == user.id), 0)
+    user_rank = next((i + 1 for i, u in enumerate(all_users) if u.id == user.id), 0)
 
     response = make_response(render_template(
         'leaderboard.html',
@@ -31,4 +31,4 @@ def leaderboard():
         samesite='Lax',
         max_age=900  # 15 minutes
     )
-    return response 
+    return response

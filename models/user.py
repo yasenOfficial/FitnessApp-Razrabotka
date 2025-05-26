@@ -1,6 +1,7 @@
 from datetime import datetime
 from extensions import db, bcrypt
 
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -21,16 +22,20 @@ class User(db.Model):
 
     def get_rank(self):
         pts = self.exercise_points
-        if pts >= 1000: return 'Master'
-        if pts >= 700:  return 'Ruby'
-        if pts >= 400:  return 'Diamond'
-        if pts >= 200:  return 'Silver'
+        if pts >= 1000:
+            return 'Master'
+        if pts >= 700:
+            return 'Ruby'
+        if pts >= 400:
+            return 'Diamond'
+        if pts >= 200:
+            return 'Silver'
         return 'Bronze'
 
     def calculate_achievements(self):
         """Calculate and update user achievements based on exercise history"""
         from models import Achievement
-        
+
         # Example achievement thresholds
         achievement_thresholds = {
             'Beginner': 100,
@@ -48,7 +53,7 @@ class User(db.Model):
                     user_id=self.id,
                     name=name
                 ).first()
-                
+
                 if not existing:
                     achievement = Achievement(
                         user_id=self.id,
@@ -56,5 +61,5 @@ class User(db.Model):
                         description=f'Earned {threshold} exercise points'
                     )
                     db.session.add(achievement)
-        
-        db.session.commit() 
+
+        db.session.commit()

@@ -1,6 +1,7 @@
 from datetime import datetime
 from extensions import db
 
+
 class Exercise(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -14,4 +15,4 @@ class Exercise(db.Model):
     user = db.relationship('User', back_populates='exercises')
 
     def __repr__(self):
-        return f'<Exercise {self.exercise_type} - {self.count}>' 
+        return f'<Exercise {self.exercise_type} - {self.count}>'

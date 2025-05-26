@@ -8,10 +8,12 @@ from utils.validators import validate_username, validate_password, validate_emai
 from . import auth_bp
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 @auth_bp.route('/')
 def auth_page():
     confirmed = request.args.get('confirmed')
     return render_template('auth.html', confirmed=bool(confirmed))
+
 
 @auth_bp.route('/confirm/<token>')
 def confirm_email(token):
@@ -21,7 +23,7 @@ def confirm_email(token):
         return "Link expired", 400
     except BadSignature:
         return "Invalid token", 400
-    
+
     user = User.query.filter_by(email=email).first()
     if user:
         user.is_active = True
@@ -29,22 +31,23 @@ def confirm_email(token):
         return redirect('/auth?confirmed=1')
     return "User not found", 404
 
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = sanitize_input(request.form.get('username'))
         email = sanitize_input(request.form.get('email'))
         password = request.form.get('password')
-        
+
         # Validate inputs
         if not validate_username(username):
             flash('Invalid username format. Use only letters, numbers, and underscores (3-30 characters).', 'error')
             return render_template('auth/register.html')
-            
+
         if not validate_email(email):
             flash('Invalid email format.', 'error')
             return render_template('auth/register.html')
-            
+
         if not validate_password(password):
             flash('Password must be at least 8 characters and contain uppercase, lowercase, and numbers.', 'error')
             return render_template('auth/register.html')
@@ -53,7 +56,7 @@ def register():
         if User.query.filter_by(username=username).first():
             flash('Username already exists.', 'error')
             return render_template('auth/register.html')
-            
+
         if User.query.filter_by(email=email).first():
             flash('Email already registered.', 'error')
             return render_template('auth/register.html')
@@ -64,7 +67,7 @@ def register():
             email=email,
             password=generate_password_hash(password, method='pbkdf2:sha256')
         )
-        
+
         try:
             db.session.add(new_user)
             db.session.commit()
@@ -77,27 +80,29 @@ def register():
 
     return render_template('auth/register.html')
 
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = sanitize_input(request.form.get('username'))
         password = request.form.get('password')
-        
+
         if not username or not password:
             flash('Please provide both username and password.', 'error')
             return render_template('auth/login.html')
 
         user = User.query.filter_by(username=username).first()
-        
+
         if user and check_password_hash(user.password, password):
             # Set session or JWT token here
             flash('Login successful!', 'success')
             return redirect(url_for('dashboard.index'))
-            
+
         flash('Invalid username or password.', 'error')
         return render_template('auth/login.html')
 
     return render_template('auth/login.html')
+
 
 @auth_bp.route('/api/register', methods=['POST'])
 def register_api():
@@ -119,19 +124,20 @@ def register_api():
 
     token = current_app.ts.dumps(email, salt='email-confirm')
     confirm_url = url_for('auth.confirm_email', token=token, _external=True)
-    
+
     msg = Message(
         "Confirm your GameFit account",
         recipients=[email]
     )
     msg.body = f"Hi {username}, confirm here:\n\n{confirm_url}"
-    
+
     try:
         mail.send(msg)
     except Exception as ex:
         current_app.logger.error(f"Mail failed: {ex}")
 
     return jsonify(success=True, message='Registered! Check your email.'), 200
+
 
 @auth_bp.route('/api/login', methods=['POST'])
 def login_api():
@@ -157,8 +163,9 @@ def login_api():
     )
     return response
 
+
 @auth_bp.route('/api/logout', methods=['POST'])
 def logout():
     response = jsonify(success=True)
     response.delete_cookie(current_app.config['JWT_ACCESS_COOKIE_NAME'])
-    return response 
+    return response

@@ -13,16 +13,17 @@ jwt = JWTManager()
 mail = Mail()
 talisman = Talisman()
 
+
 def init_extensions(app):
     db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
     mail.init_app(app)
-    
+
     # Create URL safe time serializer
     ts = URLSafeTimedSerializer(app.config['SECRET_KEY'])
     app.ts = ts  # Attach to app for access in routes
-    
+
     # JWT configuration
     @jwt.unauthorized_loader
     def handle_unauthorized_loader(msg):
@@ -48,6 +49,7 @@ def init_extensions(app):
     def user_identity_lookup(identity):
         return str(identity)
 
+
 def init_security(app):
     # Enable Talisman security headers
     talisman.init_app(
@@ -62,4 +64,4 @@ def init_security(app):
             'img-src': ["'self'", 'data:', 'https:'],
             'font-src': ["'self'", 'https:', 'data:'],
         }
-    ) 
+    )

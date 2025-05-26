@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import func
 from . import dashboard_bp
 
+
 @dashboard_bp.route('/api/exercise-stats/<exercise_type>')
 @jwt_required()
 def exercise_stats(exercise_type):
@@ -18,7 +19,7 @@ def exercise_stats(exercise_type):
     # Get the last 30 days of data
     end_date = datetime.now()
     start_date = end_date - timedelta(days=30)
-    
+
     # Query exercise data grouped by date
     stats = db.session.query(
         func.date(Exercise.date_added).label('date'),
@@ -39,7 +40,7 @@ def exercise_stats(exercise_type):
     counts = []
     current_date = start_date.date()
     stats_dict = {stat.date: stat.count for stat in stats}
-    
+
     while current_date <= end_date.date():
         date_range.append(current_date.strftime('%Y-%m-%d'))
         counts.append(stats_dict.get(current_date, 0))
@@ -49,6 +50,7 @@ def exercise_stats(exercise_type):
         'dates': date_range,
         'counts': counts
     })
+
 
 @dashboard_bp.route('/', methods=['GET', 'POST'])
 @jwt_required()
@@ -112,13 +114,14 @@ def dashboard():
         for ex in daily_routine:
             count = int(request.form.get(ex['type'], 0))
             date_str = request.form.get(f"{ex['type']}_date")
-            
+
             if count > 0:
                 # Validate date
                 try:
                     exercise_date = datetime.strptime(date_str, '%Y-%m-%d').date()
                     if exercise_date > today or exercise_date < today - timedelta(days=2):
-                        flash('Invalid date selected. Please choose a date between today and 2 days ago.', 'error')
+                        flash(
+                            'Invalid date selected. Please choose a date between today and 2 days ago.', 'error')
                         return redirect('/dashboard')
                 except (ValueError, TypeError):
                     flash('Invalid date format.', 'error')
@@ -173,4 +176,4 @@ def dashboard():
         daily_routine=daily_routine,
         per_ex_ranks=per_ex_ranks,
         available_dates=available_dates
-    ) 
+    )

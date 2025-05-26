@@ -2,8 +2,10 @@ from flask import jsonify, request, render_template, redirect, url_for
 from werkzeug.http import HTTP_STATUS_CODES
 from extensions import db
 
+
 class APIError(Exception):
     """Base exception for API errors"""
+
     def __init__(self, message, status_code=400, payload=None):
         super().__init__()
         self.message = message
@@ -17,25 +19,34 @@ class APIError(Exception):
         rv['status'] = HTTP_STATUS_CODES.get(self.status_code, 'Unknown Error')
         return rv
 
+
 class ResourceNotFoundError(APIError):
     """Exception for resource not found errors"""
+
     def __init__(self, message="Resource not found", payload=None):
         super().__init__(message=message, status_code=404, payload=payload)
 
+
 class AuthenticationError(APIError):
     """Exception for authentication errors"""
+
     def __init__(self, message="Authentication required", payload=None):
         super().__init__(message=message, status_code=401, payload=payload)
 
+
 class AuthorizationError(APIError):
     """Exception for authorization errors"""
+
     def __init__(self, message="Permission denied", payload=None):
         super().__init__(message=message, status_code=403, payload=payload)
 
+
 class ValidationError(APIError):
     """Exception for validation errors"""
+
     def __init__(self, message="Validation error", payload=None):
         super().__init__(message=message, status_code=400, payload=payload)
+
 
 def handle_api_error(error):
     """Handler for API errors"""
@@ -43,9 +54,10 @@ def handle_api_error(error):
     response.status_code = error.status_code
     return response
 
+
 def init_error_handlers(app):
     """Initialize error handlers for the application"""
-    
+
     @app.errorhandler(APIError)
     def handle_api_error_wrapper(error):
         return handle_api_error(error)
@@ -95,4 +107,4 @@ def init_error_handlers(app):
                 'message': 'Permission denied',
                 'status': 'Forbidden'
             }), 403
-        return render_template('errors/403.html'), 403 
+        return render_template('errors/403.html'), 403

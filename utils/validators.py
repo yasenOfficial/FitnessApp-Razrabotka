@@ -1,11 +1,13 @@
 import re
 from bleach import clean
 
+
 def sanitize_input(text):
     """Sanitize user input to prevent XSS attacks."""
     if not isinstance(text, str):
         return text
     return clean(text, strip=True)
+
 
 def validate_username(username):
     """Validate username format."""
@@ -13,6 +15,7 @@ def validate_username(username):
         return False
     # Only allow letters, numbers, and underscores
     return bool(re.match(r'^[a-zA-Z0-9_]+$', username))
+
 
 def validate_password(password):
     """Validate password strength."""
@@ -24,6 +27,7 @@ def validate_password(password):
     has_digit = any(c.isdigit() for c in password)
     return has_upper and has_lower and has_digit
 
+
 def validate_email(email):
     """Validate email format."""
     if not email:
@@ -32,10 +36,11 @@ def validate_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return bool(re.match(pattern, email))
 
+
 def sanitize_filename(filename):
     """Sanitize filename to prevent path traversal attacks."""
     # Remove any directory components
     filename = re.sub(r'[/\\]', '', filename)
     # Only allow certain characters
     filename = re.sub(r'[^a-zA-Z0-9._-]', '', filename)
-    return filename 
+    return filename

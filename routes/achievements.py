@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, create_access_token
 from utils.helpers import get_current_user
 from . import achievements_bp
 
+
 @achievements_bp.route('/')
 @jwt_required()
 def achievements():
@@ -12,7 +13,7 @@ def achievements():
 
     # Calculate achievements and progress
     user.calculate_achievements()
-    
+
     # Define achievement tiers and their point requirements
     achievement_tiers = {
         'Beginner': 100,
@@ -56,7 +57,8 @@ def achievements():
         for a in user.achievements
     ]
 
-    response = make_response(render_template('achievements.html', user=user, achievements=achievements_data, current_tier=current_tier, next_tier=next_tier, progress=progress))
+    response = make_response(render_template('achievements.html', user=user, achievements=achievements_data,
+                             current_tier=current_tier, next_tier=next_tier, progress=progress))
     new_token = create_access_token(identity=user.id)
     response.set_cookie(
         'access_token_cookie',
@@ -66,4 +68,4 @@ def achievements():
         samesite='Lax',
         max_age=900  # 15 minutes
     )
-    return response 
+    return response
