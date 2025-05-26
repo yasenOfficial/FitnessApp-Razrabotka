@@ -16,12 +16,17 @@ from .profile import *
 from .achievements import *
 from .leaderboard import *
 
-# List of all blueprints to register
+# List of all blueprints
 blueprints = [
-    main_bp,
     auth_bp,
+    main_bp,
     dashboard_bp,
-    profile_bp,
     achievements_bp,
+    profile_bp,
     leaderboard_bp
-] 
+]
+
+def register_blueprints(app):
+    """Register all blueprints with the app."""
+    for blueprint in blueprints:
+        app.register_blueprint(blueprint) 
