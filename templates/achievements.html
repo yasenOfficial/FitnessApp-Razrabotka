@@ -86,14 +86,30 @@
 
 <div class="card p-3">
   <h3><i class="fas fa-trophy"></i> Your Progress</h3>
-  <div class="progress mb-3">
-    <div class="progress-bar" style="width: {{ (user.achievements_unlocked / 12) * 100 if user and user.achievements_unlocked else 0 }}%;"></div>
-  </div>
-  <p>You've unlocked <strong>{% if user %}{{ user.achievements_unlocked }}{% else %}0{% endif %}/12</strong> achievements</p>
   
-  <div class="stats-card">
+  {% if current_tier %}
+  <p class="mb-2">Current Tier: <strong>{{ current_tier.name }}</strong></p>
+  {% endif %}
+  
+  <div class="progress mb-3">
+    <div class="progress-bar" role="progressbar" 
+         style="width: {{ progress }}%;" 
+         aria-valuenow="{{ progress }}" 
+         aria-valuemin="0" 
+         aria-valuemax="100">
+      <!-- {{ "%.1f"|format( progress) }}% -->
+    </div>
+  </div>
+  
+  {% if next_tier %}
+  <p class="text-muted">Progress to {{ next_tier.name }}: {{ user.exercise_points }} / {{ next_tier.threshold }} points</p>
+  {% else %}
+  <p class="text-success">Maximum tier achieved!</p>
+  {% endif %}
+  
+  <div class="stats-card mt-3">
     <div>
-      <div class="stats-card-value">{% if user %}{{ user.exercise_points }}{% else %}0{% endif %}</div>
+      <div class="stats-card-value">{{ user.exercise_points if user else 0 }}</div>
       <div class="stats-card-label">Current Points</div>
     </div>
     <i class="fas fa-award stats-card-icon"></i>

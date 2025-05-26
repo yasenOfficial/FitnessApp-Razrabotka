@@ -4,7 +4,10 @@ from . import main_bp
 
 @main_bp.route('/')
 def index():
-    return redirect('/dashboard')
+    user = get_current_user()
+    if user:
+        return redirect('/dashboard')
+    return render_template('home.html')
 
 @main_bp.route('/static/<path:p>')
 def static_serve(p):

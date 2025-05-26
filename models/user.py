@@ -10,7 +10,8 @@ class User(db.Model):
     exercise_points = db.Column(db.Integer, default=0)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
     achievements_unlocked = db.Column(db.Integer, default=0)
-    exercises = db.relationship('Exercise', backref='user', lazy=True)
+    exercises = db.relationship('Exercise', back_populates='user', lazy=True)
+    achievements = db.relationship('Achievement', back_populates='user', lazy=True)
 
     def set_password(self, pw):
         self.password_hash = bcrypt.generate_password_hash(pw).decode()
@@ -27,6 +28,33 @@ class User(db.Model):
         return 'Bronze'
 
     def calculate_achievements(self):
-        thresholds = [10,50,100,200,300,400,500,700,1000]
-        self.achievements_unlocked = sum(self.exercise_points>=t for t in thresholds)
+        """Calculate and update user achievements based on exercise history"""
+        from models import Achievement
+        
+        # Example achievement thresholds
+        achievement_thresholds = {
+            'Beginner': 100,
+            'Intermediate': 500,
+            'Advanced': 1000,
+            'Expert': 5000,
+            'Master': 10000
+        }
+
+        # Check points-based achievements
+        for name, threshold in achievement_thresholds.items():
+            if self.exercise_points >= threshold:
+                # Check if achievement already exists
+                existing = Achievement.query.filter_by(
+                    user_id=self.id,
+                    name=name
+                ).first()
+                
+                if not existing:
+                    achievement = Achievement(
+                        user_id=self.id,
+                        name=name,
+                        description=f'Earned {threshold} exercise points'
+                    )
+                    db.session.add(achievement)
+        
         db.session.commit() 
