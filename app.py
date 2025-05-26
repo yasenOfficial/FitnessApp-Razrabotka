@@ -10,8 +10,9 @@
 
 from flask import Flask, send_file
 from config import Config
-from extensions import init_extensions, db, jwt
+from extensions import init_extensions, db, jwt, init_security
 from flask_swagger_ui import get_swaggerui_blueprint
+from routes import register_blueprints
 
 def create_app(config_class=Config):
     app = Flask(__name__, static_folder='static')
@@ -20,10 +21,19 @@ def create_app(config_class=Config):
     # Initialize extensions
     init_extensions(app)
 
-    # Register web blueprints
-    from routes import blueprints
-    for blueprint in blueprints:
-        app.register_blueprint(blueprint)
+    # Initialize security features
+    init_security(app)
+
+    # Set security-related headers
+    @app.after_request
+    def add_security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        return response
+
+    # Register blueprints
+    register_blueprints(app)
 
     # Register API blueprint
     from routes.api.v1 import api_v1

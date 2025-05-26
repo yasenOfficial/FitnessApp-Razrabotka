@@ -1,10 +1,12 @@
-from flask import render_template, request, jsonify, redirect, url_for, current_app
+from flask import render_template, request, jsonify, redirect, url_for, current_app, flash
 from flask_jwt_extended import create_access_token
 from flask_mail import Message
 from itsdangerous import SignatureExpired, BadSignature
 from extensions import db, mail
 from models import User
+from utils.validators import validate_username, validate_password, validate_email, sanitize_input
 from . import auth_bp
+from werkzeug.security import generate_password_hash, check_password_hash
 
 @auth_bp.route('/')
 def auth_page():
@@ -27,8 +29,78 @@ def confirm_email(token):
         return redirect('/auth?confirmed=1')
     return "User not found", 404
 
-@auth_bp.route('/api/register', methods=['POST'])
+@auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
+    if request.method == 'POST':
+        username = sanitize_input(request.form.get('username'))
+        email = sanitize_input(request.form.get('email'))
+        password = request.form.get('password')
+        
+        # Validate inputs
+        if not validate_username(username):
+            flash('Invalid username format. Use only letters, numbers, and underscores (3-30 characters).', 'error')
+            return render_template('auth/register.html')
+            
+        if not validate_email(email):
+            flash('Invalid email format.', 'error')
+            return render_template('auth/register.html')
+            
+        if not validate_password(password):
+            flash('Password must be at least 8 characters and contain uppercase, lowercase, and numbers.', 'error')
+            return render_template('auth/register.html')
+
+        # Check if user already exists
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists.', 'error')
+            return render_template('auth/register.html')
+            
+        if User.query.filter_by(email=email).first():
+            flash('Email already registered.', 'error')
+            return render_template('auth/register.html')
+
+        # Create new user with hashed password
+        new_user = User(
+            username=username,
+            email=email,
+            password=generate_password_hash(password, method='pbkdf2:sha256')
+        )
+        
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Registration successful! Please log in.', 'success')
+            return redirect(url_for('auth.login'))
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred. Please try again.', 'error')
+            return render_template('auth/register.html')
+
+    return render_template('auth/register.html')
+
+@auth_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = sanitize_input(request.form.get('username'))
+        password = request.form.get('password')
+        
+        if not username or not password:
+            flash('Please provide both username and password.', 'error')
+            return render_template('auth/login.html')
+
+        user = User.query.filter_by(username=username).first()
+        
+        if user and check_password_hash(user.password, password):
+            # Set session or JWT token here
+            flash('Login successful!', 'success')
+            return redirect(url_for('dashboard.index'))
+            
+        flash('Invalid username or password.', 'error')
+        return render_template('auth/login.html')
+
+    return render_template('auth/login.html')
+
+@auth_bp.route('/api/register', methods=['POST'])
+def register_api():
     data = request.get_json()
     username = data.get('username')
     email = data.get('email')
@@ -62,7 +134,7 @@ def register():
     return jsonify(success=True, message='Registered! Check your email.'), 200
 
 @auth_bp.route('/api/login', methods=['POST'])
-def login():
+def login_api():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
