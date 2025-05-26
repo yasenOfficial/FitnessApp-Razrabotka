@@ -20,10 +20,14 @@ def create_app(config_class=Config):
     # Initialize extensions
     init_extensions(app)
 
-    # Register blueprints
+    # Register web blueprints
     from routes import blueprints
     for blueprint in blueprints:
         app.register_blueprint(blueprint)
+
+    # Register API blueprint
+    from routes.api.v1 import api_v1
+    app.register_blueprint(api_v1)
 
     # Swagger UI
     SWAGGER_URL = '/api/docs'

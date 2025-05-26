@@ -1,12 +1,12 @@
 openapi: 3.0.0
 info:
   title: GameFit API
-  description: API for the GameFit fitness tracking application with gamification features
+  description: RESTful API for the GameFit fitness tracking application with gamification features
   version: 1.0.0
 
 servers:
-  - url: http://localhost:5000
-    description: Development server
+  - url: http://localhost:5000/api/v1
+    description: Development server API v1
 
 components:
   securitySchemes:
@@ -23,7 +23,7 @@ components:
           type: integer
         user_id:
           type: integer
-        exercise_type:
+        type:
           type: string
           enum: [pushup, situp, squat, pullup, burpee, plank, run]
         count:
@@ -33,7 +33,7 @@ components:
           format: float
         points:
           type: integer
-        date_added:
+        date:
           type: string
           format: date-time
 
@@ -64,7 +64,28 @@ components:
         achievements:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/Achievement'
+
+    Achievement:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        unlocked_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
 
     LoginRequest:
       type: object
@@ -111,10 +132,10 @@ security:
   - bearerAuth: []
 
 paths:
-  /auth/register:
+  /users:
     post:
       tags:
-        - Authentication
+        - Users
       security: []
       summary: Register a new user
       requestBody:
@@ -122,28 +143,55 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterRequest'
+              type: object
+              required:
+                - username
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
       responses:
         '201':
-          description: User successfully registered
+          description: User successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
         '400':
-          description: Invalid input or user already exists
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
-  /auth/login:
+  /auth/token:
     post:
       tags:
         - Authentication
       security: []
-      summary: Login to get access token
+      summary: Get authentication token
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
       responses:
         '200':
-          description: Successfully logged in
+          description: Authentication successful
           content:
             application/json:
               schema:
@@ -151,96 +199,176 @@ paths:
                 properties:
                   access_token:
                     type: string
+                  token_type:
+                    type: string
+                    example: "Bearer"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
-  /dashboard:
+  /exercises:
     get:
       tags:
-        - Dashboard
-      summary: Get dashboard data
+        - Exercises
+      summary: List user exercises
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [pushup, situp, squat, pullup, burpee, plank, run]
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date
       responses:
         '200':
-          description: Dashboard data retrieved successfully
+          description: List of exercises
           content:
-            text/html:
+            application/json:
               schema:
-                type: string
+                type: array
+                items:
+                  $ref: '#/components/schemas/Exercise'
     post:
       tags:
-        - Dashboard
-      summary: Log exercises
+        - Exercises
+      summary: Log new exercise
       requestBody:
         required: true
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
+              required:
+                - type
+                - count
+                - date
               properties:
-                exercise_type:
+                type:
                   type: string
+                  enum: [pushup, situp, squat, pullup, burpee, plank, run]
                 count:
                   type: integer
                 date:
                   type: string
                   format: date
+                intensity:
+                  type: number
+                  format: float
       responses:
-        '302':
-          description: Exercises logged successfully, redirects to dashboard
+        '201':
+          description: Exercise logged successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exercise'
 
-  /dashboard/api/exercise-stats/{exercise_type}:
+  /exercises/{type}/stats:
     get:
       tags:
-        - Statistics
+        - Exercises
       summary: Get exercise statistics
       parameters:
-        - name: exercise_type
+        - name: type
           in: path
           required: true
           schema:
             type: string
             enum: [pushup, situp, squat, pullup, burpee, plank, run]
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
       responses:
         '200':
-          description: Exercise statistics retrieved successfully
+          description: Exercise statistics
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExerciseStats'
 
-  /profile:
+  /users/me:
     get:
       tags:
-        - Profile
-      summary: Get user profile
+        - Users
+      summary: Get current user profile
       responses:
         '200':
-          description: Profile data retrieved successfully
+          description: User profile
           content:
-            text/html:
+            application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/User'
 
-  /achievements:
+  /users/me/achievements:
     get:
       tags:
         - Achievements
       summary: Get user achievements
       responses:
         '200':
-          description: Achievements retrieved successfully
+          description: List of user achievements
           content:
-            text/html:
+            application/json:
               schema:
-                type: string
+                type: array
+                items:
+                  $ref: '#/components/schemas/Achievement'
 
   /leaderboard:
     get:
       tags:
         - Leaderboard
       summary: Get global leaderboard
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
       responses:
         '200':
-          description: Leaderboard retrieved successfully
+          description: Leaderboard entries
           content:
-            text/html:
+            application/json:
               schema:
-                type: string 
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        rank:
+                          type: integer
+                        user:
+                          $ref: '#/components/schemas/User'
+                        points:
+                          type: integer
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      per_page:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      total_items:
+                        type: integer 
