@@ -30,7 +30,6 @@ def validate_exercise_date(date_str):
         exercise_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         today = datetime.now().date()
         two_days_ago = today - timedelta(days=2)
-        
         if exercise_date > today or exercise_date < two_days_ago:
             return jsonify({
                 'code': 400,

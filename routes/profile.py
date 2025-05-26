@@ -47,10 +47,18 @@ def edit_profile():
             )
 
         if new_username != user.username and User.query.filter_by(username=new_username).first():
-            return render_template('profile_edit.html', user=user, error='Username already taken')
+            return render_template(
+                'profile_edit.html',
+                user=user,
+                error='Username already taken'
+            )
 
         if new_email != user.email and User.query.filter_by(email=new_email).first():
-            return render_template('profile_edit.html', user=user, error='Email already in use')
+            return render_template(
+                'profile_edit.html',
+                user=user,
+                error='Email already in use'
+            )
 
         user.username = new_username
         user.email = new_email

@@ -1,5 +1,4 @@
 from extensions import db
-from models import User, Exercise, Achievement
 from app import create_app
 
 

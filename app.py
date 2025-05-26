@@ -10,7 +10,7 @@
 
 from flask import Flask, send_file
 from config import Config
-from extensions import init_extensions, db, jwt, init_security
+from extensions import init_extensions, init_security
 from flask_swagger_ui import get_swaggerui_blueprint
 from routes import register_blueprints
 from utils.errors import init_error_handlers
