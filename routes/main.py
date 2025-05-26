@@ -1,10 +1,10 @@
-from flask import render_template, send_from_directory
+from flask import render_template, send_from_directory, redirect
 from utils.helpers import get_current_user
 from . import main_bp
 
 @main_bp.route('/')
-def home():
-    return render_template('home.html', user=get_current_user())
+def index():
+    return redirect('/dashboard')
 
 @main_bp.route('/static/<path:p>')
 def static_serve(p):

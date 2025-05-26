@@ -10,8 +10,7 @@
 
 from flask import Flask
 from config import Config
-from extensions import init_extensions
-from routes import blueprints
+from extensions import init_extensions, db, jwt
 
 def create_app(config_class=Config):
     app = Flask(__name__, static_folder='static')
@@ -21,6 +20,7 @@ def create_app(config_class=Config):
     init_extensions(app)
 
     # Register blueprints
+    from routes import blueprints
     for blueprint in blueprints:
         app.register_blueprint(blueprint)
 
