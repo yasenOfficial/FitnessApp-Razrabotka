@@ -30,7 +30,12 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Install Node.js dependencies
-        run: npm ci
+        run: |
+          if [ ! -f package-lock.json ]; then
+            npm install
+          else
+            npm ci
+          fi
 
       - name: Run Python linting
         run: |
