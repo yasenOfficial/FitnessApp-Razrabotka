@@ -1,0 +1,16 @@
+{
+  "name": "fitnessapp",
+  "version": "1.0.0",
+  "description": "GameFit - Gamified Fitness Tracking App",
+  "scripts": {
+    "lint": "eslint 'static/js/**/*.js'",
+    "lint:fix": "eslint 'static/js/**/*.js' --fix",
+    "format": "prettier --write 'static/js/**/*.{js,css,html}'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.5"
+  }
+} 
