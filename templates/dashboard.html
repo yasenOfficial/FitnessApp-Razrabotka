@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Fetch exercise data and update chart
     function updateChart(exerciseType) {
-        fetch(`/api/exercise-stats/${exerciseType}`)
+        fetch(`/dashboard/api/exercise-stats/${exerciseType}`)
             .then(response => response.json())
             .then(data => {
                 initChart({

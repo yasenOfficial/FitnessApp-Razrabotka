@@ -1,0 +1,246 @@
+openapi: 3.0.0
+info:
+  title: GameFit API
+  description: API for the GameFit fitness tracking application with gamification features
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Exercise:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        exercise_type:
+          type: string
+          enum: [pushup, situp, squat, pullup, burpee, plank, run]
+        count:
+          type: integer
+        intensity:
+          type: number
+          format: float
+        points:
+          type: integer
+        date_added:
+          type: string
+          format: date-time
+
+    ExerciseStats:
+      type: object
+      properties:
+        dates:
+          type: array
+          items:
+            type: string
+            format: date
+        counts:
+          type: array
+          items:
+            type: integer
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        exercise_points:
+          type: integer
+        achievements:
+          type: array
+          items:
+            type: string
+
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+
+    ExerciseLog:
+      type: object
+      required:
+        - exercise_type
+        - count
+        - date
+      properties:
+        exercise_type:
+          type: string
+          enum: [pushup, situp, squat, pullup, burpee, plank, run]
+        count:
+          type: integer
+        date:
+          type: string
+          format: date
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      security: []
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User successfully registered
+        '400':
+          description: Invalid input or user already exists
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      security: []
+      summary: Login to get access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successfully logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+
+  /dashboard:
+    get:
+      tags:
+        - Dashboard
+      summary: Get dashboard data
+      responses:
+        '200':
+          description: Dashboard data retrieved successfully
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      tags:
+        - Dashboard
+      summary: Log exercises
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                exercise_type:
+                  type: string
+                count:
+                  type: integer
+                date:
+                  type: string
+                  format: date
+      responses:
+        '302':
+          description: Exercises logged successfully, redirects to dashboard
+
+  /dashboard/api/exercise-stats/{exercise_type}:
+    get:
+      tags:
+        - Statistics
+      summary: Get exercise statistics
+      parameters:
+        - name: exercise_type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [pushup, situp, squat, pullup, burpee, plank, run]
+      responses:
+        '200':
+          description: Exercise statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExerciseStats'
+
+  /profile:
+    get:
+      tags:
+        - Profile
+      summary: Get user profile
+      responses:
+        '200':
+          description: Profile data retrieved successfully
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /achievements:
+    get:
+      tags:
+        - Achievements
+      summary: Get user achievements
+      responses:
+        '200':
+          description: Achievements retrieved successfully
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /leaderboard:
+    get:
+      tags:
+        - Leaderboard
+      summary: Get global leaderboard
+      responses:
+        '200':
+          description: Leaderboard retrieved successfully
+          content:
+            text/html:
+              schema:
+                type: string 
