@@ -6,5 +6,5 @@ def get_current_user():
     try:
         uid = get_jwt_identity()
         return User.query.get(uid) if uid else None
-    except:
+    except Exception:  # Catch any exception but log it properly
         return None

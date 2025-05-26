@@ -9,6 +9,116 @@ from sqlalchemy import func
 from . import dashboard_bp
 
 
+def get_daily_routine():
+    """Return the list of exercises with their metadata."""
+    return [
+        {
+            'type': 'pushup',
+            'label': 'Push-ups',
+            'icon': 'dumbbell',
+            'description': 'Targets chest, shoulders, and triceps'
+        },
+        {
+            'type': 'situp',
+            'label': 'Sit-ups',
+            'icon': 'child',
+            'description': 'Strengthens your core and abs'
+        },
+        {
+            'type': 'squat',
+            'label': 'Squats',
+            'icon': 'walking',
+            'description': 'Builds quads and glutes'
+        },
+        {
+            'type': 'pullup',
+            'label': 'Pull-ups',
+            'icon': 'person-booth',
+            'description': 'Works your back and biceps'
+        },
+        {
+            'type': 'burpee',
+            'label': 'Burpees',
+            'icon': 'running',
+            'description': 'Full-body conditioning'
+        },
+        {
+            'type': 'plank',
+            'label': 'Plank (sec)',
+            'icon': 'hourglass-start',
+            'description': 'Core stabilization and endurance'
+        },
+        {
+            'type': 'run',
+            'label': 'Running (min)',
+            'icon': 'running',
+            'description': 'Cardio, legs, and stamina'
+        },
+    ]
+
+
+def get_exercise_multipliers():
+    """Return the point multipliers for each exercise type."""
+    return {
+        'pushup': 0.5,
+        'situp': 0.3,
+        'squat': 0.4,
+        'pullup': 1.0,
+        'burpee': 1.5,
+        'plank': 0.1,
+        'run': 2.0
+    }
+
+
+def validate_exercise_date(date_str, today):
+    """Validate the exercise date."""
+    try:
+        exercise_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        if exercise_date > today or exercise_date < today - timedelta(days=2):
+            return None, 'Invalid date selected. Please choose a date between today and 2 days ago.'
+        return exercise_date, None
+    except (ValueError, TypeError):
+        return None, 'Invalid date format.'
+
+
+def process_exercise_submission(user, exercise_type, count, date_str):
+    """Process a single exercise submission."""
+    today = datetime.now().date()
+    exercise_date, error = validate_exercise_date(date_str, today)
+    if error:
+        return False, error
+
+    multipliers = get_exercise_multipliers()
+    points = round(multipliers.get(exercise_type, 0.5) * count)
+    
+    exercise = Exercise(
+        user_id=user.id,
+        exercise_type=exercise_type,
+        count=count,
+        intensity=1.0,
+        points=points,
+        date_added=datetime.combine(exercise_date, datetime.min.time())
+    )
+    user.exercise_points += points
+    db.session.add(exercise)
+    return True, None
+
+
+def get_exercise_ranks(user, daily_routine):
+    """Compute per-exercise totals & ranks."""
+    per_ex_ranks = {}
+    for ex in daily_routine:
+        total = db.session.query(db.func.sum(Exercise.count)) \
+            .filter_by(user_id=user.id, exercise_type=ex['type']) \
+            .scalar() or 0
+
+        for thresh, name in EXERCISE_RANKS[ex['type']]:
+            if total >= thresh:
+                per_ex_ranks[ex['type']] = {'total': total, 'rank': name}
+                break
+    return per_ex_ranks
+
+
 @dashboard_bp.route('/api/exercise-stats/<exercise_type>')
 @jwt_required()
 def exercise_stats(exercise_type):
@@ -57,96 +167,24 @@ def exercise_stats(exercise_type):
 def dashboard():
     user = get_current_user()
     if not user:
-        return redirect('/auth/login')  # Changed to be more specific
+        return redirect('/auth/login')
 
-    # Exercise definitions with icons and descriptions
-    daily_routine = [
-        {
-            'type': 'pushup',
-            'label': 'Push-ups',
-            'icon': 'dumbbell',
-            'description': 'Targets chest, shoulders, and triceps'
-        },
-        {
-            'type': 'situp',
-            'label': 'Sit-ups',
-            'icon': 'child',
-            'description': 'Strengthens your core and abs'
-        },
-        {
-            'type': 'squat',
-            'label': 'Squats',
-            'icon': 'walking',
-            'description': 'Builds quads and glutes'
-        },
-        {
-            'type': 'pullup',
-            'label': 'Pull-ups',
-            'icon': 'person-booth',
-            'description': 'Works your back and biceps'
-        },
-        {
-            'type': 'burpee',
-            'label': 'Burpees',
-            'icon': 'running',
-            'description': 'Full-body conditioning'
-        },
-        {
-            'type': 'plank',
-            'label': 'Plank (sec)',
-            'icon': 'hourglass-start',
-            'description': 'Core stabilization and endurance'
-        },
-        {
-            'type': 'run',
-            'label': 'Running (min)',
-            'icon': 'running',
-            'description': 'Cardio, legs, and stamina'
-        },
-    ]
-
-    # Generate available dates (today and 2 days back)
+    daily_routine = get_daily_routine()
     today = datetime.now().date()
     available_dates = [today - timedelta(days=i) for i in range(2, -1, -1)]
 
     if request.method == 'POST':
         logged_any = False
+        error = None
+
         for ex in daily_routine:
             count = int(request.form.get(ex['type'], 0))
-            date_str = request.form.get(f"{ex['type']}_date")
-
             if count > 0:
-                # Validate date
-                try:
-                    exercise_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-                    if exercise_date > today or exercise_date < today - timedelta(days=2):
-                        flash(
-                            'Invalid date selected. Please choose a date between today and 2 days ago.', 'error')
-                        return redirect('/dashboard')
-                except (ValueError, TypeError):
-                    flash('Invalid date format.', 'error')
+                date_str = request.form.get(f"{ex['type']}_date")
+                success, error = process_exercise_submission(user, ex['type'], count, date_str)
+                if not success:
+                    flash(error, 'error')
                     return redirect('/dashboard')
-
-                multipliers = {
-                    'pushup': 0.5,
-                    'situp': 0.3,
-                    'squat': 0.4,
-                    'pullup': 1.0,
-                    'burpee': 1.5,
-                    'plank': 0.1,
-                    'run': 2.0
-                }
-                points = round(multipliers.get(ex['type'], 0.5) * count)
-                exercise = Exercise(
-                    user_id=user.id,
-                    exercise_type=ex['type'],
-                    count=count,
-                    intensity=1.0,
-                    points=points,
-                    date_added=datetime.combine(exercise_date, datetime.min.time())
-                )
-                user.exercise_points += points
-                db.session.add(exercise)
                 logged_any = True
 
         if logged_any:
@@ -157,18 +195,7 @@ def dashboard():
 
         return redirect('/dashboard')
 
-    # Compute per-exercise totals & ranks
-    per_ex_ranks = {}
-    for ex in daily_routine:
-        total = db.session.query(db.func.sum(Exercise.count)) \
-            .filter_by(user_id=user.id, exercise_type=ex['type']) \
-            .scalar() or 0
-
-        # Determine rank based on EXERCISE_RANKS table
-        for thresh, name in EXERCISE_RANKS[ex['type']]:
-            if total >= thresh:
-                per_ex_ranks[ex['type']] = {'total': total, 'rank': name}
-                break
+    per_ex_ranks = get_exercise_ranks(user, daily_routine)
 
     return render_template(
         'dashboard.html',

@@ -55,6 +55,50 @@ def handle_api_error(error):
     return response
 
 
+def create_api_error_response(status_code, message):
+    """Create a JSON response for API errors."""
+    return jsonify({
+        'code': status_code,
+        'message': message,
+        'status': HTTP_STATUS_CODES.get(status_code, 'Unknown Error')
+    }), status_code
+
+
+def handle_not_found(request_path):
+    """Handle 404 errors."""
+    if request_path.startswith('/api/'):
+        return create_api_error_response(404, 'Resource not found')
+    return render_template('errors/404.html'), 404
+
+
+def handle_internal_error(request_path):
+    """Handle 500 errors."""
+    db.session.rollback()  # Roll back db session in case of error
+    if request_path.startswith('/api/'):
+        return create_api_error_response(500, 'Internal server error')
+    return render_template('errors/500.html'), 500
+
+
+def handle_unauthorized(error, request_path):
+    """Handle 401 errors."""
+    error_message = str(error)
+    # For missing cookie, just redirect silently
+    if 'Missing cookie "access_token_cookie"' in error_message:
+        return redirect(url_for('auth.login'))
+
+    # For other unauthorized errors
+    if request_path.startswith('/api/'):
+        return create_api_error_response(401, 'Authentication required')
+    return redirect(url_for('auth.login'))
+
+
+def handle_forbidden(request_path):
+    """Handle 403 errors."""
+    if request_path.startswith('/api/'):
+        return create_api_error_response(403, 'Permission denied')
+    return render_template('errors/403.html'), 403
+
+
 def init_error_handlers(app):
     """Initialize error handlers for the application"""
 
@@ -64,47 +108,16 @@ def init_error_handlers(app):
 
     @app.errorhandler(404)
     def not_found_error(error):
-        if request.path.startswith('/api/'):
-            return jsonify({
-                'code': 404,
-                'message': 'Resource not found',
-                'status': 'Not Found'
-            }), 404
-        return render_template('errors/404.html'), 404
+        return handle_not_found(request.path)
 
     @app.errorhandler(500)
     def internal_error(error):
-        db.session.rollback()  # Roll back db session in case of error
-        if request.path.startswith('/api/'):
-            return jsonify({
-                'code': 500,
-                'message': 'Internal server error',
-                'status': 'Internal Server Error'
-            }), 500
-        return render_template('errors/500.html'), 500
+        return handle_internal_error(request.path)
 
     @app.errorhandler(401)
     def unauthorized_error(error):
-        error_message = str(error)
-        # For missing cookie, just redirect silently
-        if 'Missing cookie "access_token_cookie"' in error_message:
-            return redirect(url_for('auth.login'))
-
-        # For other unauthorized errors
-        if request.path.startswith('/api/'):
-            return jsonify({
-                'code': 401,
-                'message': 'Authentication required',
-                'status': 'Unauthorized'
-            }), 401
-        return redirect(url_for('auth.login'))
+        return handle_unauthorized(error, request.path)
 
     @app.errorhandler(403)
     def forbidden_error(error):
-        if request.path.startswith('/api/'):
-            return jsonify({
-                'code': 403,
-                'message': 'Permission denied',
-                'status': 'Forbidden'
-            }), 403
-        return render_template('errors/403.html'), 403
+        return handle_forbidden(request.path)

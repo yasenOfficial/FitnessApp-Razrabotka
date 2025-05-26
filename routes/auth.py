@@ -41,7 +41,10 @@ def register():
 
         # Validate inputs
         if not validate_username(username):
-            flash('Invalid username format. Use only letters, numbers, and underscores (3-30 characters).', 'error')
+            flash(
+                'Invalid username format. Use only letters, numbers, and underscores (3-30 characters).',
+                'error'
+            )
             return render_template('auth/register.html')
 
         if not validate_email(email):
@@ -73,7 +76,7 @@ def register():
             db.session.commit()
             flash('Registration successful! Please log in.', 'success')
             return redirect(url_for('auth.login'))
-        except Exception as e:
+        except Exception:
             db.session.rollback()
             flash('An error occurred. Please try again.', 'error')
             return render_template('auth/register.html')

@@ -5,6 +5,7 @@ from models import User
 from utils.helpers import get_current_user
 from . import leaderboard_bp
 
+
 @leaderboard_bp.route('/')
 @jwt_required()
 def leaderboard():
