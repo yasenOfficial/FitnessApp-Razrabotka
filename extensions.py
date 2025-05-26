@@ -1,3 +1,4 @@
+from flask import redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
@@ -22,7 +23,27 @@ def init_extensions(app):
     ts = URLSafeTimedSerializer(app.config['SECRET_KEY'])
     app.ts = ts  # Attach to app for access in routes
     
-    # JWT identity loader
+    # JWT configuration
+    @jwt.unauthorized_loader
+    def handle_unauthorized_loader(msg):
+        return redirect(url_for('auth.auth_page'))
+
+    @jwt.invalid_token_loader
+    def handle_invalid_token(msg):
+        return redirect(url_for('auth.auth_page'))
+
+    @jwt.expired_token_loader
+    def handle_expired_token(jwt_header, jwt_data):
+        return redirect(url_for('auth.auth_page'))
+
+    @jwt.needs_fresh_token_loader
+    def handle_fresh_token_required(jwt_header, jwt_data):
+        return redirect(url_for('auth.auth_page'))
+
+    @jwt.revoked_token_loader
+    def handle_revoked_token(jwt_header, jwt_data):
+        return redirect(url_for('auth.auth_page'))
+
     @jwt.user_identity_loader
     def user_identity_lookup(identity):
         return str(identity)
