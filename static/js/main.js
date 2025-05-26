@@ -1,5 +1,118 @@
 // GameFit Main JavaScript
 document.addEventListener('DOMContentLoaded', function() {
+    // Global error handler for fetch requests
+    async function handleFetchResponse(response) {
+        const contentType = response.headers.get('content-type');
+        const isJson = contentType && contentType.includes('application/json');
+        const data = isJson ? await response.json() : null;
+
+        if (!response.ok) {
+            // Handle specific error cases
+            switch (response.status) {
+                case 401:
+                    // Handle session expiration or missing token
+                    if (data?.message?.includes('session has expired') || data?.message?.includes('Missing cookie')) {
+                        showError('Your session has expired. Redirecting to login...');
+                        setTimeout(() => {
+                            window.location.href = data?.redirect || '/auth';
+                        }, 2000);
+                    } else {
+                        // Other unauthorized cases
+                        showError('Please log in to continue');
+                        setTimeout(() => {
+                            window.location.href = data?.redirect || '/auth';
+                        }, 2000);
+                    }
+                    break;
+                case 403:
+                    // Forbidden
+                    showError('You do not have permission to perform this action');
+                    break;
+                case 404:
+                    // Not Found
+                    showError('The requested resource was not found');
+                    break;
+                case 500:
+                    // Server Error
+                    showError('An internal server error occurred. Please try again later.');
+                    break;
+                default:
+                    // Other errors
+                    showError(data?.message || 'An unexpected error occurred');
+            }
+            throw new Error(data?.message || 'Request failed');
+        }
+        return data;
+    }
+
+    // Global error message display
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-toast';
+        errorDiv.innerHTML = `
+            <div class="error-content">
+                <span class="error-message">${message}</span>
+                <button class="close-btn">&times;</button>
+            </div>
+        `;
+        document.body.appendChild(errorDiv);
+
+        // Add close button functionality
+        const closeBtn = errorDiv.querySelector('.close-btn');
+        closeBtn.addEventListener('click', () => errorDiv.remove());
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (document.body.contains(errorDiv)) {
+                errorDiv.remove();
+            }
+        }, 5000);
+    }
+
+    // Add error toast styles
+    const style = document.createElement('style');
+    style.textContent = `
+        .error-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .error-content {
+            background-color: #ff4757;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
     // Modal functionality
     const modal = document.getElementById('exerciseModal');
     const logExerciseBtn = document.getElementById('log-exercise-btn');
@@ -29,96 +142,68 @@ document.addEventListener('DOMContentLoaded', function() {
     // Exercise form submission
     const exerciseForm = document.getElementById('exercise-form');
     if (exerciseForm) {
-        exerciseForm.addEventListener('submit', function(e) {
+        exerciseForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const exerciseType = document.getElementById('exercise-type').value;
-            const exerciseCount = document.getElementById('exercise-count').value;
-            const exerciseIntensity = document.getElementById('exercise-intensity').value;
+            const exerciseCount = parseInt(document.getElementById('exercise-count').value);
+            const exerciseIntensity = parseFloat(document.getElementById('exercise-intensity').value);
             
-            if (!exerciseType || !exerciseCount) {
-                alert('Please fill out all fields');
+            if (!exerciseType || isNaN(exerciseCount) || exerciseCount <= 0) {
+                showError('Please fill in all required fields correctly');
                 return;
             }
-            
-            // Calculate points based on exercise type, count and intensity
-            let basePoints = 0;
-            switch(exerciseType) {
-                case 'pushup':
-                    basePoints = exerciseCount * 0.5;
-                    break;
-                case 'situp':
-                    basePoints = exerciseCount * 0.3;
-                    break;
-                case 'squat':
-                    basePoints = exerciseCount * 0.4;
-                    break;
-                case 'pullup':
-                    basePoints = exerciseCount * 1;
-                    break;
-                case 'burpee':
-                    basePoints = exerciseCount * 1.5;
-                    break;
-                case 'plank':
-                    basePoints = exerciseCount * 0.1; // Per second
-                    break;
-                case 'run':
-                    basePoints = exerciseCount * 2; // Per minute
-                    break;
-                default:
-                    basePoints = exerciseCount * 0.5;
-            }
-            
-            // Apply intensity multiplier
-            const pointsEarned = Math.round(basePoints * parseFloat(exerciseIntensity));
-            
-            // Send data to server (to be implemented)
-            fetch('/api/log-exercise', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    exercise_type: exerciseType,
-                    count: exerciseCount,
-                    intensity: exerciseIntensity,
-                    points: pointsEarned
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
+
+            try {
+                const response = await fetch('/api/log-exercise', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        exercise_type: exerciseType,
+                        count: exerciseCount,
+                        intensity: exerciseIntensity
+                    }),
+                });
+
+                const data = await handleFetchResponse(response);
                 if (data.success) {
-                    // Show success message with points
-                    alert(`Exercise logged! You earned ${pointsEarned} points!`);
+                    // Show success message
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'success-toast';
+                    successDiv.textContent = `Exercise logged! You earned ${data.points} points!`;
+                    document.body.appendChild(successDiv);
                     
-                    // Close modal
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                    
-                    // Refresh page to update stats
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.message);
+                    // Close modal and refresh page
+                    const modal = document.getElementById('exercise-modal');
+                    if (modal) {
+                        modal.style.display = 'none';
+                        document.body.style.overflow = 'auto';
+                    }
+                    setTimeout(() => location.reload(), 1000);
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error:', error);
-                alert('Error logging exercise. Please try again.');
-            });
+            }
         });
     }
     
     // Logout functionality
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
+        logoutBtn.addEventListener('click', async function(e) {
             e.preventDefault();
             
-            // Clear token
-            document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            
-            // Redirect to home
-            window.location.href = '/';
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST'
+                });
+                await handleFetchResponse(response);
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Error:', error);
+            }
         });
     }
     
@@ -129,18 +214,16 @@ document.addEventListener('DOMContentLoaded', function() {
         rootMargin: '0px 0px -50px 0px'
     };
     
-    const observer = new IntersectionObserver(function(entries, observer) {
+    const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.classList.add('fadeIn');
+                entry.target.classList.add('animate-in');
                 observer.unobserve(entry.target);
             }
         });
     }, observerOptions);
     
-    animatedElements.forEach(el => {
-        observer.observe(el);
-    });
+    animatedElements.forEach(el => observer.observe(el));
     
     // Confetti effect for rank up (placeholder for future implementation)
     // This would be triggered when user ranks up after logging exercise
@@ -148,4 +231,4 @@ document.addEventListener('DOMContentLoaded', function() {
         // Placeholder for confetti animation
         console.log("Confetti launched for rank up!");
     }
-    });
+});

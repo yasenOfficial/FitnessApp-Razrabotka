@@ -16,6 +16,37 @@ EXERCISE_MULTIPLIERS = {
     'run': 2.0
 }
 
+def validate_exercise_type(exercise_type):
+    """Validate exercise type and return error response if invalid."""
+    if exercise_type not in EXERCISE_MULTIPLIERS:
+        return jsonify({'code': 400, 'message': 'Invalid exercise type'}), 400
+    return None
+
+def validate_exercise_date(date_str):
+    """Validate exercise date and return error response if invalid."""
+    try:
+        exercise_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        if exercise_date > datetime.now().date() or exercise_date < datetime.now().date() - timedelta(days=2):
+            return jsonify({'code': 400, 'message': 'Date must be between today and 2 days ago'}), 400
+        return exercise_date
+    except ValueError:
+        return jsonify({'code': 400, 'message': 'Invalid date format'}), 400
+
+def serialize_exercise(exercise):
+    """Serialize exercise object to dictionary."""
+    return {
+        'id': exercise.id,
+        'type': exercise.exercise_type,
+        'count': exercise.count,
+        'intensity': exercise.intensity,
+        'points': exercise.points,
+        'date': exercise.date_added.isoformat()
+    }
+
+def calculate_points(exercise_type, count):
+    """Calculate points for an exercise."""
+    return round(EXERCISE_MULTIPLIERS[exercise_type] * count)
+
 @api_v1.route('/exercises', methods=['GET'])
 @jwt_required()
 def list_exercises():
@@ -28,22 +59,18 @@ def list_exercises():
     to_date = request.args.get('to_date')
     
     if exercise_type:
+        error_response = validate_exercise_type(exercise_type)
+        if error_response:
+            return error_response
         query = query.filter_by(exercise_type=exercise_type)
+    
     if from_date:
         query = query.filter(Exercise.date_added >= datetime.strptime(from_date, '%Y-%m-%d'))
     if to_date:
         query = query.filter(Exercise.date_added <= datetime.strptime(to_date, '%Y-%m-%d'))
     
     exercises = query.order_by(Exercise.date_added.desc()).all()
-    
-    return jsonify([{
-        'id': ex.id,
-        'type': ex.exercise_type,
-        'count': ex.count,
-        'intensity': ex.intensity,
-        'points': ex.points,
-        'date': ex.date_added.isoformat()
-    } for ex in exercises])
+    return jsonify([serialize_exercise(ex) for ex in exercises])
 
 @api_v1.route('/exercises', methods=['POST'])
 @jwt_required()
@@ -54,17 +81,15 @@ def create_exercise():
     if not all(k in data for k in ('type', 'count', 'date')):
         return jsonify({'code': 400, 'message': 'Missing required fields'}), 400
     
-    if data['type'] not in EXERCISE_MULTIPLIERS:
-        return jsonify({'code': 400, 'message': 'Invalid exercise type'}), 400
+    error_response = validate_exercise_type(data['type'])
+    if error_response:
+        return error_response
     
-    try:
-        exercise_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
-        if exercise_date > datetime.now().date() or exercise_date < datetime.now().date() - timedelta(days=2):
-            return jsonify({'code': 400, 'message': 'Date must be between today and 2 days ago'}), 400
-    except ValueError:
-        return jsonify({'code': 400, 'message': 'Invalid date format'}), 400
+    exercise_date = validate_exercise_date(data['date'])
+    if isinstance(exercise_date, tuple):  # Error response
+        return exercise_date
     
-    points = round(EXERCISE_MULTIPLIERS[data['type']] * data['count'])
+    points = calculate_points(data['type'], data['count'])
     exercise = Exercise(
         user_id=user_id,
         exercise_type=data['type'],
@@ -80,20 +105,14 @@ def create_exercise():
     db.session.add(exercise)
     db.session.commit()
     
-    return jsonify({
-        'id': exercise.id,
-        'type': exercise.exercise_type,
-        'count': exercise.count,
-        'intensity': exercise.intensity,
-        'points': exercise.points,
-        'date': exercise.date_added.isoformat()
-    }), 201
+    return jsonify(serialize_exercise(exercise)), 201
 
 @api_v1.route('/exercises/<exercise_type>/stats', methods=['GET'])
 @jwt_required()
 def get_exercise_stats(exercise_type):
-    if exercise_type not in EXERCISE_MULTIPLIERS:
-        return jsonify({'code': 400, 'message': 'Invalid exercise type'}), 400
+    error_response = validate_exercise_type(exercise_type)
+    if error_response:
+        return error_response
     
     user_id = get_jwt_identity()
     days = int(request.args.get('days', 30))
@@ -101,6 +120,7 @@ def get_exercise_stats(exercise_type):
     end_date = datetime.now()
     start_date = end_date - timedelta(days=days)
     
+    # Get exercise stats from database
     stats = db.session.query(
         func.date(Exercise.date_added).label('date'),
         func.sum(Exercise.count).label('count')
@@ -115,7 +135,7 @@ def get_exercise_stats(exercise_type):
         func.date(Exercise.date_added)
     ).all()
     
-    # Create a complete date range with zeros for missing dates
+    # Fill in missing dates with zero counts
     date_range = []
     counts = []
     current_date = start_date.date()
@@ -129,4 +149,4 @@ def get_exercise_stats(exercise_type):
     return jsonify({
         'dates': date_range,
         'counts': counts
-    }) 
+    })

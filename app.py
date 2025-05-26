@@ -13,6 +13,7 @@ from config import Config
 from extensions import init_extensions, db, jwt, init_security
 from flask_swagger_ui import get_swaggerui_blueprint
 from routes import register_blueprints
+from utils.errors import init_error_handlers
 
 def create_app(config_class=Config):
     app = Flask(__name__, static_folder='static')
@@ -20,6 +21,9 @@ def create_app(config_class=Config):
 
     # Initialize extensions
     init_extensions(app)
+
+    # Initialize error handlers
+    init_error_handlers(app)
 
     # Initialize security features
     init_security(app)

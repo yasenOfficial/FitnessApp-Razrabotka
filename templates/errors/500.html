@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Internal Server Error{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-content">
+        <h1>500</h1>
+        <h2>Internal Server Error</h2>
+        <p>Something went wrong on our end. Please try again later.</p>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">Go Home</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    text-align: center;
+}
+
+.error-content {
+    padding: 2rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.error-content h1 {
+    font-size: 6rem;
+    margin: 0;
+    color: #ff4757;
+}
+
+.error-content h2 {
+    margin: 1rem 0;
+    color: #2f3542;
+}
+
+.error-content p {
+    color: #57606f;
+    margin-bottom: 2rem;
+}
+
+.btn-primary {
+    background-color: #1e90ff;
+    color: white;
+    padding: 0.8rem 2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #147ae2;
+}
+</style>
+{% endblock %} 
