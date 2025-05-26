@@ -4,9 +4,9 @@ from extensions import db
 from models import Exercise
 from models.constants import EXERCISE_RANKS
 from utils.helpers import get_current_user
-from . import dashboard_bp
 from datetime import datetime, timedelta
 from sqlalchemy import func
+from . import dashboard_bp
 
 @dashboard_bp.route('/api/exercise-stats/<exercise_type>')
 @jwt_required()
@@ -55,7 +55,7 @@ def exercise_stats(exercise_type):
 def dashboard():
     user = get_current_user()
     if not user:
-        return redirect('/auth')
+        return redirect('/auth/login')  # Changed to be more specific
 
     # Exercise definitions with icons and descriptions
     daily_routine = [

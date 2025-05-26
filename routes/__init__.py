@@ -8,8 +8,13 @@ profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
 achievements_bp = Blueprint('achievements', __name__, url_prefix='/achievements')
 leaderboard_bp = Blueprint('leaderboard', __name__, url_prefix='/leaderboard')
 
-# Import routes
-from . import main, auth, dashboard, profile, achievements, leaderboard
+# Import routes AFTER blueprint creation to avoid circular imports
+from .main import *
+from .auth import *
+from .dashboard import *
+from .profile import *
+from .achievements import *
+from .leaderboard import *
 
 # List of all blueprints to register
 blueprints = [
