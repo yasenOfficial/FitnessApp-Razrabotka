@@ -11,8 +11,8 @@ class User(db.Model):
     exercise_points = db.Column(db.Integer, default=0)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
     achievements_unlocked = db.Column(db.Integer, default=0)
-    exercises = db.relationship('Exercise', back_populates='user', lazy=True)
-    achievements = db.relationship('Achievement', back_populates='user', lazy=True)
+    exercises = db.relationship("Exercise", back_populates="user", lazy=True)
+    achievements = db.relationship("Achievement", back_populates="user", lazy=True)
 
     def set_password(self, pw):
         self.password_hash = bcrypt.generate_password_hash(pw).decode()
@@ -23,14 +23,14 @@ class User(db.Model):
     def get_rank(self):
         pts = self.exercise_points
         if pts >= 1000:
-            return 'Master'
+            return "Master"
         if pts >= 700:
-            return 'Ruby'
+            return "Ruby"
         if pts >= 400:
-            return 'Diamond'
+            return "Diamond"
         if pts >= 200:
-            return 'Silver'
-        return 'Bronze'
+            return "Silver"
+        return "Bronze"
 
     def calculate_achievements(self):
         """Calculate and update user achievements based on exercise history"""
@@ -38,11 +38,11 @@ class User(db.Model):
 
         # Example achievement thresholds
         achievement_thresholds = {
-            'Beginner': 100,
-            'Intermediate': 500,
-            'Advanced': 1000,
-            'Expert': 5000,
-            'Master': 10000
+            "Beginner": 100,
+            "Intermediate": 500,
+            "Advanced": 1000,
+            "Expert": 5000,
+            "Master": 10000,
         }
 
         # Check points-based achievements
@@ -50,15 +50,14 @@ class User(db.Model):
             if self.exercise_points >= threshold:
                 # Check if achievement already exists
                 existing = Achievement.query.filter_by(
-                    user_id=self.id,
-                    name=name
+                    user_id=self.id, name=name
                 ).first()
 
                 if not existing:
                     achievement = Achievement(
                         user_id=self.id,
                         name=name,
-                        description=f'Earned {threshold} exercise points'
+                        description=f"Earned {threshold} exercise points",
                     )
                     db.session.add(achievement)
 

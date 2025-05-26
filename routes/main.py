@@ -3,14 +3,14 @@ from utils.helpers import get_current_user
 from . import main_bp
 
 
-@main_bp.route('/')
+@main_bp.route("/")
 def index():
     user = get_current_user()
     if user:
-        return redirect('/dashboard')
-    return render_template('home.html')
+        return redirect("/dashboard")
+    return render_template("home.html")
 
 
-@main_bp.route('/static/<path:p>')
+@main_bp.route("/static/<path:p>")
 def static_serve(p):
-    return send_from_directory('static', p)
+    return send_from_directory("static", p)

@@ -17,7 +17,7 @@ from utils.errors import init_error_handlers
 
 
 def create_app(config_class=Config):
-    app = Flask(__name__, static_folder='static')
+    app = Flask(__name__, static_folder="static")
     app.config.from_object(config_class)
 
     # Initialize extensions
@@ -32,9 +32,9 @@ def create_app(config_class=Config):
     # Set security-related headers
     @app.after_request
     def add_security_headers(response):
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
         return response
 
     # Register blueprints
@@ -42,29 +42,26 @@ def create_app(config_class=Config):
 
     # Register API blueprint
     from routes.api.v1 import api_v1, register_routes
+
     register_routes()
     app.register_blueprint(api_v1)
 
     # Swagger UI
-    SWAGGER_URL = '/api/docs'
-    API_URL = '/static/swagger.yaml'
+    SWAGGER_URL = "/api/docs"
+    API_URL = "/static/swagger.yaml"
     swaggerui_blueprint = get_swaggerui_blueprint(
-        SWAGGER_URL,
-        API_URL,
-        config={
-            'app_name': "GameFit API Documentation"
-        }
+        SWAGGER_URL, API_URL, config={"app_name": "GameFit API Documentation"}
     )
     app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
-    @app.route('/static/swagger.yaml')
+    @app.route("/static/swagger.yaml")
     def send_swagger_spec():
-        return send_file('swagger.yaml')
+        return send_file("swagger.yaml")
 
     return app
 
 
 app = create_app()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)

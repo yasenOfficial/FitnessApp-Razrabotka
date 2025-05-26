@@ -21,29 +21,29 @@ def init_extensions(app):
     mail.init_app(app)
 
     # Create URL safe time serializer
-    ts = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    ts = URLSafeTimedSerializer(app.config["SECRET_KEY"])
     app.ts = ts  # Attach to app for access in routes
 
     # JWT configuration
     @jwt.unauthorized_loader
     def handle_unauthorized_loader(msg):
-        return redirect(url_for('auth.auth_page'))
+        return redirect(url_for("auth.auth_page"))
 
     @jwt.invalid_token_loader
     def handle_invalid_token(msg):
-        return redirect(url_for('auth.auth_page'))
+        return redirect(url_for("auth.auth_page"))
 
     @jwt.expired_token_loader
     def handle_expired_token(jwt_header, jwt_data):
-        return redirect(url_for('auth.auth_page'))
+        return redirect(url_for("auth.auth_page"))
 
     @jwt.needs_fresh_token_loader
     def handle_fresh_token_required(jwt_header, jwt_data):
-        return redirect(url_for('auth.auth_page'))
+        return redirect(url_for("auth.auth_page"))
 
     @jwt.revoked_token_loader
     def handle_revoked_token(jwt_header, jwt_data):
-        return redirect(url_for('auth.auth_page'))
+        return redirect(url_for("auth.auth_page"))
 
     @jwt.user_identity_loader
     def user_identity_lookup(identity):
@@ -58,10 +58,10 @@ def init_security(app):
         strict_transport_security=True,
         session_cookie_secure=True,
         content_security_policy={
-            'default-src': "'self'",
-            'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-            'style-src': ["'self'", "'unsafe-inline'"],
-            'img-src': ["'self'", 'data:', 'https:'],
-            'font-src': ["'self'", 'https:', 'data:'],
-        }
+            "default-src": "'self'",
+            "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+            "style-src": ["'self'", "'unsafe-inline'"],
+            "img-src": ["'self'", "data:", "https:"],
+            "font-src": ["'self'", "https:", "data:"],
+        },
     )

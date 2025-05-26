@@ -1,12 +1,12 @@
 from flask import Blueprint
 
 # Create blueprints
-main_bp = Blueprint('main', __name__)
-auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
-dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
-profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
-achievements_bp = Blueprint('achievements', __name__, url_prefix='/achievements')
-leaderboard_bp = Blueprint('leaderboard', __name__, url_prefix='/leaderboard')
+main_bp = Blueprint("main", __name__)
+auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
+dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
+profile_bp = Blueprint("profile", __name__, url_prefix="/profile")
+achievements_bp = Blueprint("achievements", __name__, url_prefix="/achievements")
+leaderboard_bp = Blueprint("leaderboard", __name__, url_prefix="/leaderboard")
 
 # List of all blueprints
 blueprints = [
@@ -15,7 +15,7 @@ blueprints = [
     dashboard_bp,
     achievements_bp,
     profile_bp,
-    leaderboard_bp
+    leaderboard_bp,
 ]
 
 

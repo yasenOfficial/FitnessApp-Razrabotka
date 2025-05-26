@@ -14,7 +14,7 @@ def validate_username(username):
     if not username or len(username) < 3 or len(username) > 30:
         return False
     # Only allow letters, numbers, and underscores
-    return bool(re.match(r'^[a-zA-Z0-9_]+$', username))
+    return bool(re.match(r"^[a-zA-Z0-9_]+$", username))
 
 
 def validate_password(password):
@@ -33,14 +33,14 @@ def validate_email(email):
     if not email:
         return False
     # Basic email format validation
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return bool(re.match(pattern, email))
 
 
 def sanitize_filename(filename):
     """Sanitize filename to prevent path traversal attacks."""
     # Remove any directory components
-    filename = re.sub(r'[/\\]', '', filename)
+    filename = re.sub(r"[/\\]", "", filename)
     # Only allow certain characters
-    filename = re.sub(r'[^a-zA-Z0-9._-]', '', filename)
+    filename = re.sub(r"[^a-zA-Z0-9._-]", "", filename)
     return filename
