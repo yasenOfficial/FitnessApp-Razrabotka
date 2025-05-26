@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return showMessage('Please fill in all fields', 'error');
     }
 
-    const ep  = isReg ? '/api/register' : '/api/login';
+    const ep  = isReg ? '/auth/api/register' : '/auth/api/login';
     const pd  = { username:u, password:p };
     if(isReg) pd.email = mailVal;
 
