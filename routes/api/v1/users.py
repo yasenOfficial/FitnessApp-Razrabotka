@@ -1,6 +1,6 @@
 from flask import jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import User, Achievement
+from models import User
 from extensions import db, bcrypt
 from . import api_v1
 

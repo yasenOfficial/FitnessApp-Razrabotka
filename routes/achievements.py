@@ -57,8 +57,14 @@ def achievements():
         for a in user.achievements
     ]
 
-    response = make_response(render_template('achievements.html', user=user, achievements=achievements_data,
-                             current_tier=current_tier, next_tier=next_tier, progress=progress))
+    response = make_response(render_template(
+        'achievements.html',
+        user=user,
+        achievements=achievements_data,
+        current_tier=current_tier,
+        next_tier=next_tier,
+        progress=progress
+    ))
     new_token = create_access_token(identity=user.id)
     response.set_cookie(
         'access_token_cookie',

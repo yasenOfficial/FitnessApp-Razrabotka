@@ -28,8 +28,14 @@ def validate_exercise_date(date_str):
     """Validate exercise date and return error response if invalid."""
     try:
         exercise_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-        if exercise_date > datetime.now().date() or exercise_date < datetime.now().date() - timedelta(days=2):
-            return jsonify({'code': 400, 'message': 'Date must be between today and 2 days ago'}), 400
+        today = datetime.now().date()
+        two_days_ago = today - timedelta(days=2)
+        
+        if exercise_date > today or exercise_date < two_days_ago:
+            return jsonify({
+                'code': 400,
+                'message': 'Date must be between today and 2 days ago'
+            }), 400
         return exercise_date
     except ValueError:
         return jsonify({'code': 400, 'message': 'Invalid date format'}), 400

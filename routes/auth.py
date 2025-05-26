@@ -42,7 +42,8 @@ def register():
         # Validate inputs
         if not validate_username(username):
             flash(
-                'Invalid username format. Use only letters, numbers, and underscores (3-30 characters).',
+                'Invalid username format. Use only letters, numbers, '
+                'and underscores (3-30 characters).',
                 'error'
             )
             return render_template('auth/register.html')
@@ -52,7 +53,11 @@ def register():
             return render_template('auth/register.html')
 
         if not validate_password(password):
-            flash('Password must be at least 8 characters and contain uppercase, lowercase, and numbers.', 'error')
+            flash(
+                'Password must be at least 8 characters and contain uppercase, '
+                'lowercase, and numbers.',
+                'error'
+            )
             return render_template('auth/register.html')
 
         # Check if user already exists

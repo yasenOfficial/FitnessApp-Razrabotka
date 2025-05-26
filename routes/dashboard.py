@@ -90,7 +90,7 @@ def process_exercise_submission(user, exercise_type, count, date_str):
 
     multipliers = get_exercise_multipliers()
     points = round(multipliers.get(exercise_type, 0.5) * count)
-    
+
     exercise = Exercise(
         user_id=user.id,
         exercise_type=exercise_type,

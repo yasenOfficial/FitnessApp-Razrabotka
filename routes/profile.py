@@ -40,7 +40,11 @@ def edit_profile():
         new_password = data.get('password').strip()
 
         if not new_username or not new_email:
-            return render_template('profile_edit.html', user=user, error='Username and email cannot be empty.')
+            return render_template(
+                'profile_edit.html',
+                user=user,
+                error='Username and email cannot be empty.'
+            )
 
         if new_username != user.username and User.query.filter_by(username=new_username).first():
             return render_template('profile_edit.html', user=user, error='Username already taken')
