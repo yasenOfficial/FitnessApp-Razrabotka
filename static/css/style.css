@@ -129,15 +129,58 @@ h5 {
   background: rgba(26, 26, 46, 0.7);
   border-radius: 10px;
   box-shadow: var(--card-shadow);
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   overflow: hidden;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-.card:hover {
+.exercise-card {
+  cursor: pointer;
+  position: relative;
+  text-align: center;
+  padding: 20px !important;
+}
+.exercise-card .d-flex {
+  justify-content: center;
+  margin-bottom: 15px;
+}
+.exercise-card .fa-2x {
+  font-size: 2.5em;
+  margin-right: 0;
+  margin-bottom: 10px;
+  display: block;
+}
+.exercise-card h5 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  color: var(--secondary);
+}
+.exercise-card p {
+  margin: 8px 0;
+  font-size: 0.95rem;
+}
+.exercise-card em {
+  display: block;
+  margin-bottom: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  min-height: 40px;
+}
+.exercise-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  transition: border-color 0.3s ease;
+}
+.exercise-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+.exercise-card:hover::after {
+  border-color: var(--primary);
 }
 .p-4 {
   padding: 25px;
@@ -262,12 +305,30 @@ h5 {
   font-family: inherit;
   box-sizing: border-box;
   transition: all 0.3s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
+
+/* Style select dropdowns */
+select.form-control {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  padding-right: 40px;
+}
+
+select.form-control option {
+  background-color: var(--dark);
+  color: var(--light);
+}
+
 .form-control:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(255, 110, 64, 0.25);
 }
+
 label {
   display: block;
   margin-bottom: 5px;
@@ -285,38 +346,60 @@ label {
   justify-content: center;
   align-items: center;
   z-index: 9999;
+  backdrop-filter: blur(5px);
 }
 .modal-content {
   background: var(--dark);
-  padding: 25px;
-  border-radius: 10px;
+  padding: 30px;
+  border-radius: 15px;
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: modalSlideIn 0.3s ease-out;
+}
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .close-modal {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 20px;
+  right: 20px;
   font-size: 1.5rem;
   cursor: pointer;
   color: rgba(255, 255, 255, 0.5);
   transition: color 0.3s ease;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
 }
 .close-modal:hover {
   color: var(--light);
+  background: rgba(255, 255, 255, 0.2);
 }
 /* Grid Layout */
 .row {
   display: flex;
   flex-wrap: wrap;
-  margin: 0 -15px;
+  margin: 0 -10px;
   justify-content: center;
 }
 .col-md-6 {
   flex: 0 0 100%;
-  padding: 0 15px;
+  max-width: 100%;
+  padding: 0 10px;
 }
 /* Stats Card */
 .stats-card {
@@ -468,7 +551,9 @@ label {
 /* Responsive */
 @media (min-width: 768px) {
   .col-md-6 {
-    flex: 0 0 50%;
+    flex: 0 0 calc(33.333% - 20px);
+    max-width: calc(33.333% - 20px);
+    margin: 10px;
   }
 }
 @media (max-width: 767px) {
@@ -499,3 +584,43 @@ label {
 }
 /* Font imports */
 @import url("https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700&family=Rajdhani:wght@400;500;600;700&display=swap");
+
+/* Statistics Section */
+.chart-container {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 15px;
+}
+
+#exerciseSelect {
+  min-width: 150px;
+  max-width: 200px;
+}
+
+/* Make chart tooltip dark themed */
+.chartjs-tooltip {
+  background: var(--dark) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: var(--light) !important;
+  border-radius: 5px !important;
+  padding: 8px 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Responsive chart container */
+@media (max-width: 767px) {
+  .chart-container {
+    height: 250px !important;
+  }
+  
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  #exerciseSelect {
+    width: 100%;
+    max-width: none;
+  }
+}
