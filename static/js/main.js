@@ -10,19 +10,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // Handle specific error cases
             switch (response.status) {
                 case 401:
-                    // Handle session expiration or missing token
-                    if (data?.message?.includes('session has expired') || data?.message?.includes('Missing cookie')) {
-                        showError('Your session has expired. Redirecting to login...');
-                        setTimeout(() => {
-                            window.location.href = data?.redirect || '/auth';
-                        }, 2000);
-                    } else {
-                        // Other unauthorized cases
-                        showError('Please log in to continue');
-                        setTimeout(() => {
-                            window.location.href = data?.redirect || '/auth';
-                        }, 2000);
+                    // For missing cookie or expired session, redirect silently
+                    if (data?.message?.includes('Missing cookie')) {
+                        window.location.href = '/auth';
+                        return;
                     }
+                    // For other unauthorized cases
+                    showError('Please log in to continue');
+                    setTimeout(() => {
+                        window.location.href = '/auth';
+                    }, 2000);
                     break;
                 case 403:
                     // Forbidden

@@ -74,22 +74,16 @@ def init_error_handlers(app):
     @app.errorhandler(401)
     def unauthorized_error(error):
         error_message = str(error)
+        # For missing cookie, just redirect silently
         if 'Missing cookie "access_token_cookie"' in error_message:
-            if request.path.startswith('/api/'):
-                return jsonify({
-                    'code': 401,
-                    'message': 'Your session has expired. Please log in again.',
-                    'status': 'Unauthorized',
-                    'redirect': url_for('auth.login')
-                }), 401
             return redirect(url_for('auth.login'))
 
+        # For other unauthorized errors
         if request.path.startswith('/api/'):
             return jsonify({
                 'code': 401,
                 'message': 'Authentication required',
-                'status': 'Unauthorized',
-                'redirect': url_for('auth.login')
+                'status': 'Unauthorized'
             }), 401
         return redirect(url_for('auth.login'))
 
