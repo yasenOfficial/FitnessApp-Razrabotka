@@ -1,0 +1,9 @@
+EXERCISE_RANKS = {
+    'pushup': [(2000,'Mythic'),(1000,'Master'),(700,'Ruby'),(400,'Diamond'),(200,'Silver'),(0,'Bronze')],
+    'situp':  [(3000,'Mythic'),(1500,'Master'),(1000,'Ruby'),(500,'Diamond'), (200,'Silver'),(0,'Bronze')],
+    'squat':  [(2500,'Mythic'),(1200,'Master'),(800,'Ruby'), (500,'Diamond'), (200,'Silver'),(0,'Bronze')],
+    'burpee': [(1000,'Mythic'),(700,'Master'), (400,'Ruby'),  (200,'Diamond'), (100,'Silver'),(0,'Bronze')],
+    'run':    [(5000,'Mythic'),(2000,'Master'),(1000,'Ruby'), (500,'Diamond'), (200,'Silver'),(0,'Bronze')],
+    'pullup': [(1500,'Mythic'),(800,'Master'), (500,'Ruby'),  (300,'Diamond'), (100,'Silver'), (0,'Bronze')],
+    'plank':  [(10000,'Mythic'),(5000,'Master'),(2000,'Ruby'),(1000,'Diamond'), (500,'Silver'), (0,'Bronze')],
+} 
