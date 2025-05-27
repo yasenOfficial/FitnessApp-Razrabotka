@@ -1,4 +1,4 @@
-from flask import make_response, redirect, render_template, request
+from flask import make_response, redirect, render_template, request, current_app
 from flask_jwt_extended import create_access_token, jwt_required
 
 from extensions import db
@@ -18,12 +18,12 @@ def profile():
     response = make_response(render_template("profile.html", user=user))
     new_token = create_access_token(identity=user.id)
     response.set_cookie(
-        "access_token_cookie",
+        current_app.config["JWT_ACCESS_COOKIE_NAME"],
         new_token,
         httponly=True,
-        secure=True,
+        secure=current_app.config["JWT_COOKIE_SECURE"],
         samesite="Lax",
-        max_age=900,  # 15 minutes
+        max_age=900  # 15 minutes
     )
     return response
 

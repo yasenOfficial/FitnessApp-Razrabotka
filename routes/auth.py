@@ -166,9 +166,9 @@ def login_api():
         current_app.config["JWT_ACCESS_COOKIE_NAME"],
         token,
         httponly=True,
-        secure=True,
+        secure=current_app.config["JWT_COOKIE_SECURE"],
         samesite="Lax",
-        max_age=900,  # 15 minutes
+        max_age=900  # 15 minutes
     )
     return response
 
