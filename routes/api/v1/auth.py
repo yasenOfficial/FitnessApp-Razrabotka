@@ -1,7 +1,9 @@
 from flask import jsonify, request
 from flask_jwt_extended import create_access_token
-from models import User
+
 from extensions import bcrypt
+from models import User
+
 from . import api_v1
 
 

@@ -1,6 +1,8 @@
-from flask import render_template, redirect, make_response
-from flask_jwt_extended import jwt_required, create_access_token
+from flask import make_response, redirect, render_template
+from flask_jwt_extended import create_access_token, jwt_required
+
 from utils.helpers import get_current_user
+
 from . import achievements_bp
 
 

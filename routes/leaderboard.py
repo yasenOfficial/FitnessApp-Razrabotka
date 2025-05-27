@@ -1,8 +1,10 @@
-from flask import render_template, redirect, make_response
-from flask_jwt_extended import jwt_required, create_access_token
+from flask import make_response, redirect, render_template
+from flask_jwt_extended import create_access_token, jwt_required
 from sqlalchemy import desc
+
 from models import User
 from utils.helpers import get_current_user
+
 from . import leaderboard_bp
 
 
@@ -18,9 +20,7 @@ def leaderboard():
     user_rank = next((i + 1 for i, u in enumerate(all_users) if u.id == user.id), 0)
 
     response = make_response(
-        render_template(
-            "leaderboard.html", user=user, top_players=top_players, user_rank=user_rank
-        )
+        render_template("leaderboard.html", user=user, top_players=top_players, user_rank=user_rank)
     )
     new_token = create_access_token(identity=user.id)
     response.set_cookie(

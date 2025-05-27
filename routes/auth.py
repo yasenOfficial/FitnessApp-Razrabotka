@@ -1,25 +1,16 @@
-from flask import (
-    render_template,
-    request,
-    jsonify,
-    redirect,
-    url_for,
-    current_app,
-    flash,
-)
+from flask import (current_app, flash, jsonify, redirect, render_template,
+                   request, url_for)
 from flask_jwt_extended import create_access_token
 from flask_mail import Message
-from itsdangerous import SignatureExpired, BadSignature
+from itsdangerous import BadSignature, SignatureExpired
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from extensions import db, mail
 from models import User
-from utils.validators import (
-    validate_username,
-    validate_password,
-    validate_email,
-    sanitize_input,
-)
+from utils.validators import (sanitize_input, validate_email,
+                              validate_password, validate_username)
+
 from . import auth_bp
-from werkzeug.security import generate_password_hash, check_password_hash
 
 
 @auth_bp.route("/")

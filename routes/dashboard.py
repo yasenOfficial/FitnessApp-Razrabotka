@@ -1,11 +1,14 @@
-from flask import render_template, redirect, request, flash, jsonify
+from datetime import datetime, timedelta
+
+from flask import flash, jsonify, redirect, render_template, request
 from flask_jwt_extended import jwt_required
+from sqlalchemy import func
+
 from extensions import db
 from models import Exercise
 from models.constants import EXERCISE_RANKS
 from utils.helpers import get_current_user
-from datetime import datetime, timedelta
-from sqlalchemy import func
+
 from . import dashboard_bp
 
 
@@ -186,9 +189,7 @@ def dashboard():
             count = int(request.form.get(ex["type"], 0))
             if count > 0:
                 date_str = request.form.get(f"{ex['type']}_date")
-                success, error = process_exercise_submission(
-                    user, ex["type"], count, date_str
-                )
+                success, error = process_exercise_submission(user, ex["type"], count, date_str)
                 if not success:
                     flash(error, "error")
                     return redirect("/dashboard")

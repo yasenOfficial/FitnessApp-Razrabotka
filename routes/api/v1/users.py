@@ -1,7 +1,9 @@
 from flask import jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import get_jwt_identity, jwt_required
+
+from extensions import bcrypt, db
 from models import User
-from extensions import db, bcrypt
+
 from . import api_v1
 
 
@@ -19,9 +21,7 @@ def create_user():
         return jsonify({"code": 400, "message": "Email already exists"}), 400
 
     hashed_password = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
-    user = User(
-        username=data["username"], email=data["email"], password=hashed_password
-    )
+    user = User(username=data["username"], email=data["email"], password=hashed_password)
 
     db.session.add(user)
     db.session.commit()

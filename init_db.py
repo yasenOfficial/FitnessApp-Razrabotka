@@ -1,5 +1,5 @@
-from extensions import db
 from app import create_app
+from extensions import db
 
 
 def init_database():

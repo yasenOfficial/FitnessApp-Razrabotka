@@ -1,8 +1,10 @@
-from flask import render_template, redirect, request, make_response
-from flask_jwt_extended import jwt_required, create_access_token
+from flask import make_response, redirect, render_template, request
+from flask_jwt_extended import create_access_token, jwt_required
+
 from extensions import db
 from models import User
 from utils.helpers import get_current_user
+
 from . import profile_bp
 
 
@@ -46,18 +48,11 @@ def edit_profile():
                 error="Username and email cannot be empty.",
             )
 
-        if (
-            new_username != user.username
-            and User.query.filter_by(username=new_username).first()
-        ):
-            return render_template(
-                "profile_edit.html", user=user, error="Username already taken"
-            )
+        if new_username != user.username and User.query.filter_by(username=new_username).first():
+            return render_template("profile_edit.html", user=user, error="Username already taken")
 
         if new_email != user.email and User.query.filter_by(email=new_email).first():
-            return render_template(
-                "profile_edit.html", user=user, error="Email already in use"
-            )
+            return render_template("profile_edit.html", user=user, error="Email already in use")
 
         user.username = new_username
         user.email = new_email

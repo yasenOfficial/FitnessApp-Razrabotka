@@ -1,5 +1,6 @@
-from flask import jsonify, request, render_template, redirect, url_for
+from flask import jsonify, redirect, render_template, request, url_for
 from werkzeug.http import HTTP_STATUS_CODES
+
 from extensions import db
 
 

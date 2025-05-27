@@ -1,5 +1,7 @@
-from flask import render_template, send_from_directory, redirect
+from flask import redirect, render_template, send_from_directory
+
 from utils.helpers import get_current_user
+
 from . import main_bp
 
 

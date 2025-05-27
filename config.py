@@ -1,6 +1,7 @@
-from dotenv import load_dotenv
-import os
 import datetime
+import os
+
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
@@ -13,9 +14,7 @@ class Config:
 
     # JWT Configuration
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(
-        minutes=int(os.getenv("JWT_EXPIRES_MINUTES", 15))
-    )
+    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=int(os.getenv("JWT_EXPIRES_MINUTES", 15)))
     JWT_TOKEN_LOCATION = ["cookies"]
     JWT_COOKIE_CSRF_PROTECT = False
     JWT_ACCESS_COOKIE_NAME = "access_token_cookie"

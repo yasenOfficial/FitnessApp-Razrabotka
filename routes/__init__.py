@@ -23,12 +23,7 @@ def register_blueprints(app):
     """Register all blueprints with the app."""
     # Import routes here to avoid circular imports
     # These imports are required to register the routes with the blueprints
-    from . import main
-    from . import auth
-    from . import dashboard
-    from . import profile
-    from . import achievements
-    from . import leaderboard
+    from . import achievements, auth, dashboard, leaderboard, main, profile
 
     for blueprint in blueprints:
         app.register_blueprint(blueprint)

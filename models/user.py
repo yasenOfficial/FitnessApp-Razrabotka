@@ -1,5 +1,6 @@
 from datetime import datetime
-from extensions import db, bcrypt
+
+from extensions import bcrypt, db
 
 
 class User(db.Model):
@@ -49,9 +50,7 @@ class User(db.Model):
         for name, threshold in achievement_thresholds.items():
             if self.exercise_points >= threshold:
                 # Check if achievement already exists
-                existing = Achievement.query.filter_by(
-                    user_id=self.id, name=name
-                ).first()
+                existing = Achievement.query.filter_by(user_id=self.id, name=name).first()
 
                 if not existing:
                     achievement = Achievement(
