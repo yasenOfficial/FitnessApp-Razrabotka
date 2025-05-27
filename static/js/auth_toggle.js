@@ -5,7 +5,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const emailGroup = document.getElementById('email-group');
   let isLogin = true;
 
+  console.log('Auth toggle script loaded');
+  console.log('Elements found:', {
+    toggleBtn: !!toggleBtn,
+    formTitle: !!formTitle,
+    submitBtn: !!submitBtn,
+    emailGroup: !!emailGroup
+  });
+
+  if (!toggleBtn || !formTitle || !submitBtn || !emailGroup) {
+    console.error('Some required elements are missing');
+    return;
+  }
+
   toggleBtn.addEventListener('click', () => {
+    console.log('Toggle button clicked, switching to:', isLogin ? 'register' : 'login');
     isLogin = !isLogin;
     if (isLogin) {
       formTitle.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';

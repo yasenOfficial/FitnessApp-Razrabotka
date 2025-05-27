@@ -1,5 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}GameFit – Dashboard{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/css/all.min.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="container mt-5 fadeIn">
   <h2 class="mb-4 text-center"><i class="fas fa-th-large"></i> Dashboard</h2>
@@ -96,7 +102,7 @@
 
 {% block scripts %}
 {{ super() }}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='vendor/js/chart.min.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('exerciseLogModal');
@@ -114,6 +120,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (progressChart) {
             progressChart.destroy();
         }
+
+        // Find the maximum value for better scaling
+        const maxCount = Math.max(...data.counts);
+        console.log('Maximum count value:', maxCount);
 
         progressChart = new Chart(ctx, {
             type: 'line',
@@ -136,6 +146,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         labels: {
                             color: '#f7f7f7'
                         }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Count: ${context.parsed.y.toLocaleString()}`;
+                            }
+                        }
                     }
                 },
                 scales: {
@@ -145,8 +162,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             color: 'rgba(255, 255, 255, 0.1)'
                         },
                         ticks: {
-                            color: '#f7f7f7'
-                        }
+                            color: '#f7f7f7',
+                            callback: function(value) {
+                                if (value >= 1000000) {
+                                    return (value / 1000000).toFixed(1) + 'M';
+                                } else if (value >= 1000) {
+                                    return (value / 1000).toFixed(1) + 'K';
+                                }
+                                return value;
+                            }
+                        },
+                        suggestedMax: maxCount * 1.1 // Add 10% padding to the top
                     },
                     x: {
                         grid: {
@@ -163,16 +189,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Fetch exercise data and update chart
     function updateChart(exerciseType) {
-        fetch(`/dashboard/api/exercise-stats/${exerciseType}`)
+        console.log('Fetching stats for exercise type:', exerciseType);
+        fetch(`/api/v1/exercises/${exerciseType}/stats`)
             .then(response => response.json())
             .then(data => {
+                console.log('Received stats data:', data);
+                // Verify the data is being processed correctly
+                console.log('Data validation:');
+                console.log('Number of dates:', data.dates.length);
+                console.log('Number of counts:', data.counts.length);
+                console.log('Sample counts:', data.counts.slice(-5));
+                
                 initChart({
                     labels: data.dates,
                     counts: data.counts,
                     exerciseLabel: exerciseSelect.options[exerciseSelect.selectedIndex].text
                 });
             })
-            .catch(error => console.error('Error fetching exercise stats:', error));
+            .catch(error => {
+                console.error('Error fetching exercise stats:', error);
+            });
     }
 
     // Exercise selector change handler
@@ -214,29 +250,40 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(form);
-        const data = {};
-        formData.forEach((value, key) => {
-            if (key === 'exerciseType') {
-                data[value] = parseInt(formData.get('exerciseCount')) || 0;
-                data[`${value}_date`] = formData.get('exerciseDate');
-            }
-        });
+        const exerciseType = formData.get('exerciseType');
+        const count = parseInt(formData.get('exerciseCount')) || 0;
+        const date = formData.get('exerciseDate');
 
-        // Submit the form
-        const actualForm = document.createElement('form');
-        actualForm.method = 'POST';
-        actualForm.action = '/dashboard';
-        
-        Object.keys(data).forEach(key => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = data[key];
-            actualForm.appendChild(input);
-        });
+        if (count <= 0) {
+            return;
+        }
 
-        document.body.appendChild(actualForm);
-        actualForm.submit();
+        const submitData = {
+            type: exerciseType,
+            count: count,
+            date: date
+        };
+        console.log('Submitting exercise data:', submitData);
+
+        // Submit to the API
+        fetch('/api/v1/exercises', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(submitData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Exercise submission response:', data);
+            // Close modal and refresh page
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error logging exercise:', error);
+        });
     });
 
     // Auto-dismiss alerts

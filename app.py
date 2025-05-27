@@ -14,6 +14,7 @@ from extensions import init_extensions, init_security
 from flask_swagger_ui import get_swaggerui_blueprint
 from routes import register_blueprints
 from utils.errors import init_error_handlers
+from utils.security import init_security_headers
 
 
 def create_app(config_class=Config):
@@ -28,6 +29,7 @@ def create_app(config_class=Config):
 
     # Initialize security features
     init_security(app)
+    init_security_headers(app)
 
     # Set security-related headers
     @app.after_request
