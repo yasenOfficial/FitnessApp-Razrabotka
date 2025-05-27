@@ -23,6 +23,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pytest pytest-flask pytest-cov
+        pip install flask-talisman flask-jwt-extended flask-mail flask-sqlalchemy flask-bcrypt
         
     - name: Run tests
       env:
@@ -31,9 +32,4 @@ jobs:
         MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
         MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
       run: |
-        pytest -v --cov=./ --cov-report=xml
-        
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }} 
+        pytest -v 
