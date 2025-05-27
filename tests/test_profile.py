@@ -17,11 +17,11 @@ def test_profile_with_auth(client, app):
         # Create a valid access token
         access_token = create_access_token(identity=mock_user.id)
         
-        with patch('flask_jwt_extended.get_jwt_identity', return_value=mock_user.id), \
+        with patch('utils.helpers.get_jwt_identity', return_value=mock_user.id), \
              patch('extensions.db.session.get', return_value=mock_user):
             
             # Set the JWT token in the cookie
-            client.set_cookie('access_token_cookie', access_token)
+            client.set_cookie(app.config["JWT_ACCESS_COOKIE_NAME"], access_token)
             
             response = client.get('/profile/')
             assert response.status_code == 200
@@ -39,11 +39,11 @@ def test_edit_profile_get(client, app):
         # Create a valid access token
         access_token = create_access_token(identity=mock_user.id)
         
-        with patch('flask_jwt_extended.get_jwt_identity', return_value=mock_user.id), \
+        with patch('utils.helpers.get_jwt_identity', return_value=mock_user.id), \
              patch('extensions.db.session.get', return_value=mock_user):
             
             # Set the JWT token in the cookie
-            client.set_cookie('access_token_cookie', access_token)
+            client.set_cookie(app.config["JWT_ACCESS_COOKIE_NAME"], access_token)
             
             response = client.get('/profile/edit')
             assert response.status_code == 200
@@ -62,7 +62,7 @@ def test_edit_profile_post_success(client, app):
         # Create a valid access token
         access_token = create_access_token(identity=mock_user.id)
         
-        with patch('flask_jwt_extended.get_jwt_identity', return_value=mock_user.id), \
+        with patch('utils.helpers.get_jwt_identity', return_value=mock_user.id), \
              patch('extensions.db.session.get', return_value=mock_user), \
              patch('models.User.query') as mock_query:
             
@@ -70,7 +70,7 @@ def test_edit_profile_post_success(client, app):
             mock_query.filter_by().first.return_value = None
             
             # Set the JWT token in the cookie
-            client.set_cookie('access_token_cookie', access_token)
+            client.set_cookie(app.config["JWT_ACCESS_COOKIE_NAME"], access_token)
             
             data = {
                 'username': 'newusername',
@@ -93,11 +93,11 @@ def test_edit_profile_post_empty_fields(client, app):
         # Create a valid access token
         access_token = create_access_token(identity=mock_user.id)
         
-        with patch('flask_jwt_extended.get_jwt_identity', return_value=mock_user.id), \
+        with patch('utils.helpers.get_jwt_identity', return_value=mock_user.id), \
              patch('extensions.db.session.get', return_value=mock_user):
             
             # Set the JWT token in the cookie
-            client.set_cookie('access_token_cookie', access_token)
+            client.set_cookie(app.config["JWT_ACCESS_COOKIE_NAME"], access_token)
             
             data = {
                 'username': '',
@@ -120,7 +120,7 @@ def test_edit_profile_username_taken(client, app):
         # Create a valid access token
         access_token = create_access_token(identity=mock_user.id)
         
-        with patch('flask_jwt_extended.get_jwt_identity', return_value=mock_user.id), \
+        with patch('utils.helpers.get_jwt_identity', return_value=mock_user.id), \
              patch('extensions.db.session.get', return_value=mock_user), \
              patch('models.User.query') as mock_query:
             
@@ -128,7 +128,7 @@ def test_edit_profile_username_taken(client, app):
             mock_query.filter_by().first.return_value = MagicMock()
             
             # Set the JWT token in the cookie
-            client.set_cookie('access_token_cookie', access_token)
+            client.set_cookie(app.config["JWT_ACCESS_COOKIE_NAME"], access_token)
             
             data = {
                 'username': 'takenusername',
