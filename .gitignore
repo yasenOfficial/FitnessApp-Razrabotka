@@ -1,2 +1,8 @@
 venv/
 .env
+htmlcov/
+.coverage
+.coveragerc
+.pytest_cache/
+__pycache__/
+app.log

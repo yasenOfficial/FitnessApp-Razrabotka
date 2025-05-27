@@ -77,7 +77,7 @@ def register():
         new_user = User(
             username=username,
             email=email,
-            password=generate_password_hash(password, method="pbkdf2:sha256"),
+            password_hash=generate_password_hash(password, method="pbkdf2:sha256"),
         )
 
         try:
@@ -101,7 +101,7 @@ def login():
 
         if not username or not password:
             flash("Please provide both username and password.", "error")
-            return render_template("auth/login.html")
+            return render_template("auth.html")
 
         user = User.query.filter_by(username=username).first()
 
@@ -111,9 +111,9 @@ def login():
             return redirect(url_for("dashboard.index"))
 
         flash("Invalid username or password.", "error")
-        return render_template("auth/login.html")
+        return render_template("auth.html")
 
-    return render_template("auth/login.html")
+    return render_template("auth.html")
 
 
 @auth_bp.route("/api/register", methods=["POST"])
