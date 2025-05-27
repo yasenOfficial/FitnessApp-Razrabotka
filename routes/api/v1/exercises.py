@@ -5,6 +5,11 @@ from sqlalchemy import func
 from models import Exercise, User
 from extensions import db
 from . import api_v1
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 EXERCISE_MULTIPLIERS = {
     "pushup": 0.5,
@@ -97,16 +102,21 @@ def list_exercises():
 def create_exercise():
     user_id = get_jwt_identity()
     data = request.get_json()
+    
+    logger.info(f"Received exercise submission: {data}")
 
     if not all(k in data for k in ("type", "count", "date")):
+        logger.error("Missing required fields in submission")
         return jsonify({"code": 400, "message": "Missing required fields"}), 400
 
     error_response = validate_exercise_type(data["type"])
     if error_response:
+        logger.error(f"Invalid exercise type: {data['type']}")
         return error_response
 
     exercise_date = validate_exercise_date(data["date"])
     if isinstance(exercise_date, tuple):  # Error response
+        logger.error(f"Invalid date: {data['date']}")
         return exercise_date
 
     points = calculate_points(data["type"], data["count"])
@@ -124,15 +134,22 @@ def create_exercise():
 
     db.session.add(exercise)
     db.session.commit()
-
+    
+    logger.info(
+        f"Successfully saved exercise: type={data['type']}, "
+        f"count={data['count']}, date={data['date']}, points={points}"
+    )
     return jsonify(serialize_exercise(exercise)), 201
 
 
 @api_v1.route("/exercises/<exercise_type>/stats", methods=["GET"])
 @jwt_required()
 def get_exercise_stats(exercise_type):
+    logger.info(f"Fetching stats for exercise type: {exercise_type}")
+    
     error_response = validate_exercise_type(exercise_type)
     if error_response:
+        logger.error(f"Invalid exercise type: {exercise_type}")
         return error_response
 
     user_id = get_jwt_identity()
@@ -140,6 +157,8 @@ def get_exercise_stats(exercise_type):
 
     end_date = datetime.now()
     start_date = end_date - timedelta(days=days)
+    
+    logger.info(f"Querying exercises from {start_date} to {end_date}")
 
     # Get exercise stats from database
     stats = (
@@ -157,16 +176,32 @@ def get_exercise_stats(exercise_type):
         .order_by(func.date(Exercise.date_added))
         .all()
     )
+    
+    logger.info(f"Raw stats from database: {[(str(s.date), s.count) for s in stats]}")
 
     # Fill in missing dates with zero counts
     date_range = []
     counts = []
     current_date = start_date.date()
-    stats_dict = {stat.date: stat.count for stat in stats}
+    
+    # Create dictionary with string dates (they're already strings from the query)
+    stats_dict = {str(stat.date): stat.count for stat in stats}
+    
+    logger.info("Processing stats:")
+    logger.info(f"Stats dictionary with formatted dates: {stats_dict}")
 
     while current_date <= end_date.date():
-        date_range.append(current_date.strftime("%Y-%m-%d"))
-        counts.append(stats_dict.get(current_date, 0))
+        date_str = current_date.strftime("%Y-%m-%d")
+        count = stats_dict.get(date_str, 0)
+        found_in_dict = date_str in stats_dict
+        logger.info(f"Processing date {date_str}: found in dict: {found_in_dict}, count = {count}")
+        date_range.append(date_str)
+        counts.append(count)
         current_date += timedelta(days=1)
+
+    logger.info("Final processed data:")
+    logger.info(f"Dates: {date_range}")
+    logger.info(f"Counts: {counts}")
+    logger.info(f"Non-zero counts: {[c for c in counts if c != 0]}")
 
     return jsonify({"dates": date_range, "counts": counts})
