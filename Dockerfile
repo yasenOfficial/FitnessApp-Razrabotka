@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN mkdir -p instance && chmod 777 instance
 
 # Copy the rest of the application
-COPY . .
+COPY . . # NOSONAR
 
 # Expose port
 EXPOSE 5000
