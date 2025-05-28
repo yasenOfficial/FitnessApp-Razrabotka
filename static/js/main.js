@@ -1,5 +1,29 @@
 // GameFit Main JavaScript
 document.addEventListener('DOMContentLoaded', function() {
+    // Hamburger menu functionality
+    const navbarToggle = document.getElementById('navbar-toggle');
+    const navLinks = document.getElementById('nav-links');
+    
+    if (navbarToggle && navLinks) {
+        navbarToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!navbarToggle.contains(e.target) && !navLinks.contains(e.target)) {
+                navLinks.classList.remove('active');
+            }
+        });
+
+        // Close menu when clicking a nav link
+        navLinks.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+    }
+
     // Global error handler for fetch requests
     async function handleFetchResponse(response) {
         const contentType = response.headers.get('content-type');
@@ -193,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             
             try {
-                const response = await fetch('/api/logout', {
+                const response = await fetch('/auth/api/logout', {
                     method: 'POST'
                 });
                 await handleFetchResponse(response);

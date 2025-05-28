@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded',function(){
   // Logout
   document.getElementById('logout-btn')?.addEventListener('click',e=>{
     e.preventDefault();
-    fetch('/api/logout',{method:'POST'}).then(_=>window.location.href='/');
+    fetch('/auth/api/logout',{method:'POST'}).then(_=>window.location.href='/');
   });
   // Delete Account
   document.getElementById('delete-profile')?.addEventListener('click',()=>{
