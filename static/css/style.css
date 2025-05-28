@@ -670,3 +670,35 @@ label {
     max-width: none;
   }
 }
+
+/* Error Pages */
+.error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    text-align: center;
+}
+
+.error-content {
+    padding: 2rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.error-content h1 {
+    font-size: 6rem;
+    margin: 0;
+    color: #ff4757;
+}
+
+.error-content h2 {
+    margin: 1rem 0;
+    color: #2f3542;
+}
+
+.error-content p {
+    color: #57606f;
+    margin-bottom: 2rem;
+}
