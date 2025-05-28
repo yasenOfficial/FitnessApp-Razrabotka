@@ -12,7 +12,10 @@
   <body>
     <nav class="navbar">
       <a class="navbar-brand" href="/"><i class="fas fa-fire"></i> GAMEFIT</a>
-      <div class="nav-links">
+      <button class="navbar-toggle" id="navbar-toggle">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="nav-links" id="nav-links">
         {% if user %}
         <a class="nav-link" href="/dashboard">
           <i class="fas fa-th-large"></i> Dashboard
