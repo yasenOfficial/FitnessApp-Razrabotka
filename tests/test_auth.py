@@ -32,13 +32,7 @@ def test_confirm_email_valid(client, app):
             assert response.status_code == 302
             assert '/auth?confirmed=1' in response.location
 
-def test_register_api(client, app):
-    data = {
-        "username": "testuser",
-        "email": "test@example.com",
-        "password": "TestPass123"
-    }
-
+def test_register_api(client, app, test_user_data):
     with app.app_context():
         # Mock the token serializer
         app.ts = MagicMock()
@@ -54,7 +48,7 @@ def test_register_api(client, app):
             mock_query.filter.return_value.first.return_value = None
             
             response = client.post('/auth/api/register', 
-                                data=json.dumps(data),
+                                data=json.dumps(test_user_data),
                                 content_type='application/json')
             
             assert response.status_code == 200
@@ -66,10 +60,10 @@ def test_register_api(client, app):
             assert response_data['success'] == True
             assert 'Registered!' in response_data['message']
 
-def test_login_api(client):
+def test_login_api(client, test_user_data):
     data = {
-        "username": "testuser",
-        "password": "TestPass123"
+        "username": test_user_data["username"],
+        "password": test_user_data["password"]
     }
     response = client.post('/auth/api/login',
                           data=json.dumps(data),
@@ -81,13 +75,7 @@ def test_logout(client):
     assert response.status_code == 200
     assert json.loads(response.data)['success'] == True
 
-def test_register_form(client, app):
-    data = {
-        "username": "testuser",
-        "email": "test@example.com",
-        "password": "TestPass123"
-    }
-
+def test_register_form(client, app, test_user_data):
     with app.app_context():
         print("\nStarting register form test...")
         
@@ -106,9 +94,9 @@ def test_register_form(client, app):
             mock_hash.return_value = 'hashed_password'
             
             print("About to make the request...")
-            print(f"Request data: {data}")
+            print(f"Request data: {test_user_data}")
             
-            response = client.post('/auth/register', data=data)
+            response = client.post('/auth/register', data=test_user_data)
             
             print(f"Response status: {response.status_code}")
             print(f"Response data: {response.data.decode()}")
@@ -123,7 +111,7 @@ def test_register_form(client, app):
                 print(f"mock_add call args: {mock_add.call_args}")
             
             # Verify the password was hashed
-            mock_hash.assert_called_once_with(data['password'], method='pbkdf2:sha256')
+            mock_hash.assert_called_once_with(test_user_data['password'], method='pbkdf2:sha256')
             
             # Verify database operations
             assert mock_add.called
@@ -133,10 +121,10 @@ def test_register_form(client, app):
             assert response.status_code == 302
             assert '/auth/login' in response.location
 
-def test_login_form(client):
+def test_login_form(client, test_user_data):
     data = {
-        "username": "testuser",
-        "password": "TestPass123"
+        "username": test_user_data["username"],
+        "password": test_user_data["password"]
     }
     response = client.post('/auth/login', data=data)
     assert response.status_code in [200, 302]  # Either renders form again or redirects 

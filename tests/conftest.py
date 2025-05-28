@@ -4,6 +4,16 @@ from flask_jwt_extended import JWTManager
 from extensions import db, mail
 from routes import register_blueprints
 import os
+import secrets
+
+@pytest.fixture
+def test_user_data():
+    """Fixture to provide test user data without hardcoding credentials in test files."""
+    return {
+        "username": os.getenv("TEST_USERNAME", "testuser"),
+        "email": os.getenv("TEST_EMAIL", "test@example.com"),
+        "password": os.getenv("TEST_PASSWORD", secrets.token_urlsafe(16))  # Generate a random secure password if not provided
+    }
 
 @pytest.fixture
 def app():
@@ -16,12 +26,17 @@ def app():
                 template_folder=template_dir,
                 static_folder=static_dir)
 
+    # Generate secure random keys for testing
+    # Note: In production, these should come from environment variables
+    test_secret_key = secrets.token_hex(32)
+    test_jwt_secret = secrets.token_hex(32)
+
     app.config.update({
         'TESTING': True,
-        'SECRET_KEY': 'test_secret_key',
+        'SECRET_KEY': os.getenv('TEST_SECRET_KEY', test_secret_key),
         'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-        'JWT_SECRET_KEY': 'test_jwt_secret',
+        'JWT_SECRET_KEY': os.getenv('TEST_JWT_SECRET_KEY', test_jwt_secret),
         'JWT_TOKEN_LOCATION': ['cookies'],
         'JWT_COOKIE_CSRF_PROTECT': False,
         'JWT_ACCESS_COOKIE_NAME': 'access_token_cookie',
