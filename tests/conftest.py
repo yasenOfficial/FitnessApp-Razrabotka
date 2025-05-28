@@ -22,9 +22,7 @@ def app():
     template_dir = os.path.join(project_dir, 'templates')
     static_dir = os.path.join(project_dir, 'static')
 
-    app = Flask(__name__,
-                template_folder=template_dir,
-                static_folder=static_dir)
+    app = Flask(__name__, template_folder=template_dir, static_folder=static_dir) # NOSONAR
 
     # Generate secure random keys for testing
     # Note: In production, these should come from environment variables

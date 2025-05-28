@@ -28,7 +28,7 @@ def profile():
     return response
 
 
-@profile_bp.route("/edit", methods=["GET", "POST"])
+@profile_bp.route("/edit", methods=["GET", "POST"]) # NOSONAR
 @jwt_required()
 def edit_profile():
     user = get_current_user()

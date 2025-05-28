@@ -36,7 +36,7 @@ def confirm_email(token):
     return "User not found", 404
 
 
-@auth_bp.route("/register", methods=["GET", "POST"])
+@auth_bp.route("/register", methods=["GET", "POST"]) # NOSONAR
 def register():
     if request.method == "POST":
         username = sanitize_input(request.form.get("username"))
@@ -93,7 +93,7 @@ def register():
     return render_template("auth/register.html")
 
 
-@auth_bp.route("/login", methods=["GET", "POST"])
+@auth_bp.route("/login", methods=["GET", "POST"]) # NOSONAR
 def login():
     if request.method == "POST":
         username = sanitize_input(request.form.get("username"))

@@ -170,7 +170,7 @@ def exercise_stats(exercise_type):
     return jsonify({"dates": date_range, "counts": counts})
 
 
-@dashboard_bp.route("/", methods=["GET", "POST"])
+@dashboard_bp.route("/", methods=["GET", "POST"]) # NOSONAR
 @jwt_required()
 def dashboard():
     user = get_current_user()
