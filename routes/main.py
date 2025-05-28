@@ -20,4 +20,4 @@ def index():
 
 @main_bp.route("/static/<path:p>")
 def static_serve(p):
-    return send_from_directory("static", p)
+    return send_from_directory("static", p) 
